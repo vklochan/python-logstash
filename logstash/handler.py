@@ -44,27 +44,23 @@ class LogstashHandler(DatagramHandler):
 
         if record.exc_info:
             add_debug_info = True
-            self.add_message_field(message_dict, 'exc_info', self.format_exception(record.exc_info))
+            message_dict['@fields']['exc_info'] = self.format_exception(record.exc_info)
 
         if add_debug_info:
-            self.add_message_field(message_dict, 'pathname', record.pathname)
-            self.add_message_field(message_dict, 'lineno', record.lineno)
-            self.add_message_field(message_dict, 'process', record.process)
-            self.add_message_field(message_dict, 'threadName', record.threadName)
-            self.add_message_field(message_dict, 'lineno', record.lineno)
+            message_dict['@fields']['lineno'] = record.lineno
+            message_dict['@fields']['pathname'] = record.pathname
+            message_dict['@fields']['process'] = record.process
+            message_dict['@fields']['threadName'] = record.threadName
             # funName was added in 2.5
             if not getattr(record, 'funcName', None):
-                self.add_message_field(message_dict, 'funcName', record.funcName)
+                message_dict['@fields']['funcName'] = record.funcName
             # processName was added in 2.6
             if not getattr(record, 'processName', None):
-                self.add_message_field(message_dict, 'processName', record.processName)
+                message_dict['@fields']['processName'] = record.processName
 
         message_dict = self.add_extra_fields(message_dict, record)
 
         return message_dict
-
-    def add_message_field(self, message_dict, key, value):
-        message_dict['@fields'][key] = repr(value)
 
     def add_extra_fields(self, message_dict, record):
         # The list contains all the attributes listed in
@@ -77,7 +73,7 @@ class LogstashHandler(DatagramHandler):
 
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                self.add_message_field(message_dict, key, value)
+                message_dict['@fields'][key] = repr(value)
 
         return message_dict
 

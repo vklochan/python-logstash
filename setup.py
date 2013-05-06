@@ -2,8 +2,9 @@ from distutils.core import setup
 setup(
     name='python-logstash',
     packages=['logstash'],
-    version='0.1.1',
+    version='0.1.2',
     description='Python logging handler for Logstash.',
+    long_description=open('README.md').read(),
     author='Vladimir Klochan',
     author_email='vklochan@gmail.com',
     url='https://github.com/vklochan/python-logstash',

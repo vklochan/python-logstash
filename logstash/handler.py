@@ -73,12 +73,15 @@ class LogstashHandler(DatagramHandler):
 
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                message_dict['@fields'][key] = repr(value)
+                if isinstance(value, (basestring, bool, dict, float, int, list, type(None))):
+                    message_dict['@fields'][key] = value
+                else:
+                    message_dict['@fields'][key] = repr(value)
 
         return message_dict
 
     def format_exception(self, exc_info):
-        return '\n'.join(traceback.format_exception(*exc_info)) if exc_info else ''
+        return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
 
     def format_timestamp(self, time):
         return datetime.utcfromtimestamp(time).isoformat()

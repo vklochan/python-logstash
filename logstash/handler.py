@@ -13,8 +13,10 @@ class LogstashHandler(DatagramHandler):
     :param fqdn; Indicates whether to show fully qualified domain name or not (default False).
     """
 
-    def __init__(self, host, port=5959, message_type='logstash', fqdn=False):
+    def __init__(self, host, port=5959, message_type='logstash',
+                 message_path='logstash', fqdn=False):
         self.message_type = message_type
+        self.message_path = message_path
         self.fqdn = fqdn
         DatagramHandler.__init__(self, host, port)
 
@@ -36,7 +38,9 @@ class LogstashHandler(DatagramHandler):
                 'logger': record.name,
             },
             '@message': record.getMessage(),
-            '@source': host,
+            '@source': self.format_source(host),
+            '@source_host': host,
+            '@source_path': self.message_path,
             '@tags': [],
             '@timestamp': self.format_timestamp(record.created),
             '@type': self.message_type,
@@ -85,3 +89,6 @@ class LogstashHandler(DatagramHandler):
 
     def format_timestamp(self, time):
         return datetime.utcfromtimestamp(time).isoformat()
+
+    def format_source(self, host):
+        return "%s://%s/%s" % (self.message_type, host, self.message_path)

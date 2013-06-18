@@ -1,4 +1,6 @@
 *.py[cod]
+MANIFEST
+.idea
 
 # C extensions
 *.so

@@ -1,6 +1,7 @@
 import json
 import traceback
 import socket
+import sys
 from logging.handlers import DatagramHandler
 from datetime import datetime
 
@@ -22,7 +23,10 @@ class LogstashHandler(DatagramHandler):
 
     def makePickle(self, record):
         message_dict = self.build_message(record)
-        return json.dumps(message_dict)
+        if sys.version_info < (3, 0):
+            return json.dumps(message_dict)
+        else:
+            return bytes(json.dumps(message_dict), 'utf-8')
 
     def build_message(self, record):
         add_debug_info = False
@@ -75,9 +79,14 @@ class LogstashHandler(DatagramHandler):
             'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
             'processName', 'relativeCreated', 'thread', 'threadName')
 
+        if sys.version_info < (3, 0):
+            easy_types = (basestring, bool, dict, float, int, list, type(None))
+        else:
+            easy_types = (str, bool, dict, float, int, list, type(None))
+
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                if isinstance(value, (basestring, bool, dict, float, int, list, type(None))):
+                if isinstance(value, easy_types):
                     message_dict['@fields'][key] = value
                 else:
                     message_dict['@fields'][key] = repr(value)

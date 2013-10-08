@@ -5,7 +5,7 @@ Python logging handler for Logstash.
 
 Changelog
 =========
-0.2.0
+0.2.1
   - Added support for the new JSON schema in Logstash 1.2.x. See details in
     http://tobrunet.ch/2013/09/logstash-1-2-0-upgrade-notes-included/ and
     https://logstash.jira.com/browse/LOGSTASH-675

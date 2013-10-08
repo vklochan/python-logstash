@@ -3,6 +3,18 @@ python-logstash
 
 Python logging handler for Logstash.
 
+Changelog
+=========
+0.2.0
+  - Added support for the new JSON schema in Logstash 1.2.x. See details in
+    http://tobrunet.ch/2013/09/logstash-1-2-0-upgrade-notes-included/ and
+    https://logstash.jira.com/browse/LOGSTASH-675
+
+    - Added ``version`` parameter. Available values: 0, 1. The default value is 0.
+
+    - The version for the new JSON schema in The new JSON schema's version is 1.
+
+
 Installation
 ============
 
@@ -10,8 +22,8 @@ Using pip::
 
   pip install python-logstash
 
-Using example
-=============
+Usage
+=====
 
 ``LogstashHandler`` is a custom logging handler which sends Logstash messages using UDP.
 
@@ -22,7 +34,7 @@ For example::
 
   test_logger = logging.getLogger('test_logger')
   test_logger.setLevel(logging.INFO)
-  test_logger.addHandler(logstash.LogstashHandler('localhost', 5959))
+  test_logger.addHandler(logstash.LogstashHandler('localhost', 5959, version=1))
 
   test_logger.info('Test logstash message.')
 
@@ -39,6 +51,7 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
             'class': 'logstash.LogstashHandler',
             'host': 'localhost',
             'port': 5959,
+            'version': 1,
         },
     },
     'loggers': {

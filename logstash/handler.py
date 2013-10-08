@@ -1,8 +1,7 @@
-import json
 import traceback
 import socket
 from logging.handlers import DatagramHandler
-from datetime import datetime
+from message import LogstashMessage, LogstashMessageVersion0
 
 
 class LogstashHandler(DatagramHandler):
@@ -11,16 +10,18 @@ class LogstashHandler(DatagramHandler):
     :param port: The port of the logstash server (default 5959).
     :param message_type: The type of the message (default logstash).
     :param fqdn; Indicates whether to show fully qualified domain name or not (default False).
+    :param version: version of logstash event schema (default is 0).
     """
 
-    def __init__(self, host, port=5959, message_type='logstash', fqdn=False):
+    def __init__(self, host, port=5959, message_type='logstash', fqdn=False, version=0):
         self.message_type = message_type
         self.fqdn = fqdn
+        self.version = version
         DatagramHandler.__init__(self, host, port)
 
     def makePickle(self, record):
-        message_dict = self.build_message(record)
-        return json.dumps(message_dict)
+        message = self.build_message(record)
+        return message.get_json()
 
     def build_message(self, record):
         add_debug_info = False
@@ -30,40 +31,32 @@ class LogstashHandler(DatagramHandler):
         else:
             host = socket.gethostname()
 
-        message_dict = {
-            '@fields': {
-                'levelname': record.levelname,
-                'logger': record.name,
-            },
-            '@message': record.getMessage(),
-            '@source': self.format_source(host, record.pathname),
-            '@source_host': host,
-            '@source_path': record.pathname,
-            '@tags': [],
-            '@timestamp': self.format_timestamp(record.created),
-            '@type': self.message_type,
-        }
+        # if version is not specified use version 0
+        logstashMessageType = LogstashMessage if self.version == 1 else LogstashMessageVersion0
+        # create message object
+        message = logstashMessageType(record.getMessage(), host, record.pathname, [], record.created, self.message_type, record.levelname, record.name)
 
+        # if exception, add debug info
         if record.exc_info:
             add_debug_info = True
-            message_dict['@fields']['exc_info'] = self.format_exception(record.exc_info)
+            message.setExtraField('exc_info', self.format_exception(record.exc_info))
 
         if add_debug_info:
-            message_dict['@fields']['lineno'] = record.lineno
-            message_dict['@fields']['process'] = record.process
-            message_dict['@fields']['threadName'] = record.threadName
+            message.setExtraField('lineno', record.lineno)
+            message.setExtraField('process', record.process)
+            message.setExtraField('threadName', record.threadName)
             # funName was added in 2.5
             if not getattr(record, 'funcName', None):
-                message_dict['@fields']['funcName'] = record.funcName
+                message.setExtraField('funcName', record.funcName)
             # processName was added in 2.6
             if not getattr(record, 'processName', None):
-                message_dict['@fields']['processName'] = record.processName
+                message.setExtraField('processName', record.processName)
 
-        message_dict = self.add_extra_fields(message_dict, record)
+        message = self.add_extra_fields(message, record)
 
-        return message_dict
+        return message
 
-    def add_extra_fields(self, message_dict, record):
+    def add_extra_fields(self, message, record):
         # The list contains all the attributes listed in
         # http://docs.python.org/library/logging.html#logrecord-attributes
         skip_list = (
@@ -75,17 +68,11 @@ class LogstashHandler(DatagramHandler):
         for key, value in record.__dict__.items():
             if key not in skip_list:
                 if isinstance(value, (basestring, bool, dict, float, int, list, type(None))):
-                    message_dict['@fields'][key] = value
+                    message.setExtraField(key, value)
                 else:
-                    message_dict['@fields'][key] = repr(value)
+                    message.setExtraField(key, repr(value))
 
-        return message_dict
+        return message
 
     def format_exception(self, exc_info):
         return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
-
-    def format_timestamp(self, time):
-        return datetime.utcfromtimestamp(time).isoformat()
-
-    def format_source(self, host, path):
-        return "%s://%s/%s" % (self.message_type, host, path)

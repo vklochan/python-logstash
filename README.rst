@@ -10,9 +10,7 @@ Changelog
     http://tobrunet.ch/2013/09/logstash-1-2-0-upgrade-notes-included/ and
     https://logstash.jira.com/browse/LOGSTASH-675
 
-    - Added ``version`` parameter. Available values: 0, 1. The default value is 0.
-
-    - The version for the new JSON schema in The new JSON schema's version is 1.
+    - Added ``version`` parameter. Available values: 1 (Logstash 1.2.x version format), 0 - default (previous version).
 
 
 Installation

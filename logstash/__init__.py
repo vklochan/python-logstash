@@ -1,1 +1,2 @@
-from handler import LogstashHandler
+from logstash.handler import LogstashHandler
+from logstash.formatter import LogstashFormatterVersion0, LogstashFormatterVersion1

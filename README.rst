@@ -2,9 +2,12 @@ python-logstash
 ===============
 
 Python logging handler for Logstash.
+http://logstash.net/
 
 Changelog
 =========
+0.2.2
+  - Split Handler into Handler and Formatter classes
 0.2.1
   - Added support for the new JSON schema in Logstash 1.2.x. See details in
     http://tobrunet.ch/2013/09/logstash-1-2-0-upgrade-notes-included/ and

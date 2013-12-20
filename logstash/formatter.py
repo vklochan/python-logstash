@@ -46,7 +46,7 @@ class LogstashFormatterBase(logging.Formatter):
         # funcName was added in 2.5
         if not getattr(record, 'funcName', None):
             fields['funcName'] = record.funcName
-        
+
         # processName was added in 2.6
         if not getattr(record, 'processName', None):
             fields['processName'] = record.processName
@@ -68,7 +68,7 @@ class LogstashFormatterBase(logging.Formatter):
 
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
-    
+
     def format(self, record):
         # Create message dict
         message = {
@@ -88,7 +88,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
 
         # Add extra fields
         message['@fields'].update(self.get_extra_fields(record))
-        
+
         # If exception, add debug info
         if record.exc_info:
             message['@fields'].update(self.get_debug_fields(record))
@@ -107,7 +107,7 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             'path': record.pathname,
             'tags': self.tags,
             'type': self.message_type,
-            
+
             # Extra Fields
             'levelname': record.levelname,
             'logger': record.name,
@@ -115,7 +115,7 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
 
         # Add extra fields
         message.update(self.get_extra_fields(record))
-        
+
         # If exception, add debug info
         if record.exc_info:
             message.update(self.get_debug_fields(record))

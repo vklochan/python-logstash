@@ -1,4 +1,3 @@
-import socket
 from logging.handlers import DatagramHandler
 from logstash import formatter
 
@@ -13,12 +12,11 @@ class LogstashHandler(DatagramHandler):
     """
 
     def __init__(self, host, port=5959, message_type='logstash', fqdn=False, version=0):
+        DatagramHandler.__init__(self, host, port)
         if version == 1:
             self.formatter = formatter.LogstashFormatterVersion1(message_type, [], fqdn)
         else:
             self.formatter = formatter.LogstashFormatterVersion0(message_type, [], fqdn)
-
-        DatagramHandler.__init__(self, host, port)
 
     def makePickle(self, record):
         return self.formatter.format(record)

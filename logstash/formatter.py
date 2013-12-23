@@ -1,8 +1,12 @@
 import traceback
 import logging
-import json
 import socket
+import sys
 from datetime import datetime
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 
 class LogstashFormatterBase(logging.Formatter):
@@ -24,11 +28,16 @@ class LogstashFormatterBase(logging.Formatter):
             'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
             'processName', 'relativeCreated', 'thread', 'threadName', 'extra')
 
+        if sys.version_info < (3, 0):
+            easy_types = (basestring, bool, dict, float, int, list, type(None))
+        else:
+            easy_types = (str, bool, dict, float, int, list, type(None))
+
         fields = {}
 
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                if isinstance(value, (basestring, bool, dict, float, int, list, type(None))):
+                if isinstance(value, easy_types):
                     fields[key] = value
                 else:
                     fields[key] = repr(value)
@@ -65,6 +74,12 @@ class LogstashFormatterBase(logging.Formatter):
     def format_exception(cls, exc_info):
         return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
 
+    @classmethod
+    def serialize(cls, message):
+        if sys.version_info < (3, 0):
+            return json.dumps(message)
+        else:
+            return bytes(json.dumps(message), 'utf-8')
 
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
@@ -93,7 +108,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
         if record.exc_info:
             message['@fields'].update(self.get_debug_fields(record))
 
-        return json.dumps(message)
+        return self.serialize(message)
 
 
 class LogstashFormatterVersion1(LogstashFormatterBase):
@@ -120,4 +135,4 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
         if record.exc_info:
             message.update(self.get_debug_fields(record))
 
-        return json.dumps(message)
+        return self.serialize(message)

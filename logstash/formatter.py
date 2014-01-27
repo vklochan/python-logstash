@@ -68,7 +68,8 @@ class LogstashFormatterBase(logging.Formatter):
 
     @classmethod
     def format_timestamp(cls, time):
-        return datetime.utcfromtimestamp(time).isoformat() + 'Z'
+        tstamp = datetime.utcfromtimestamp(time)
+        return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
 
     @classmethod
     def format_exception(cls, exc_info):

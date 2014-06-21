@@ -38,5 +38,5 @@ class UDPLogstashHandler(TCPLogstashHandler, DatagramHandler):
 
 
 # For backward compatibility
-LogstashHandler = TCPLogstashHandler
+LogstashHandler = UDPLogstashHandler
 

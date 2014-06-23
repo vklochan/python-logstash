@@ -1,2 +1,3 @@
 from logstash.handler import LogstashHandler
+from logstash.handler import TCPLogstashHandler, UDPLogstashHandler
 from logstash.formatter import LogstashFormatterVersion0, LogstashFormatterVersion1

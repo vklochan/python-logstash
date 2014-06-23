@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.1
+  - Added TCP handler.
 0.3.1
   - Added support for Python 3
 0.2.2

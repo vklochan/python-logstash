@@ -42,6 +42,21 @@ For example::
   test_logger.addHandler(logstash.LogstashHandler('localhost', 5959, version=1))
 
   test_logger.info('Test logstash message.')
+  test_logger.warning('Test logstash message.')
+  test_logger.error('Test logstash message.')
+
+  # Add tags, which can later be used in elastic-search + kibana (or other tools)
+  d = {'tags': ['Testing', 'Documentation']}
+  test_logger.info('Test logstash message and tags', extra=d)
+
+  # Add custom fields for easier searching (with or without other fields - for example 'tags')
+  extra = {'user_id': 1}
+  test_logger.info('Test logstash fields', extra=extra)
+  fields = {'test_field': True, 'tags': ['Testing']}
+  test_logger.info('Test logstash fields', extra=fields)
+
+When using ``extra`` field make sure you don't use reserved names. From `Python documentation <https://docs.python.org/2/library/logging.html>`_:
+  The keys in the dictionary passed in extra should not clash with the keys used by the logging system. (See the `Formatter <https://docs.python.org/2/library/logging.html#logging.Formatter>`_ documentation for more information on which keys are used by the logging system.)
 
 Using with Django
 =================

@@ -55,8 +55,15 @@ For example::
   fields = {'test_field': True, 'tags': ['Testing']}
   test_logger.info('Test logstash fields', extra=fields)
 
-When using ``extra`` field make sure you don't use reserved names. From `Python documentation <https://docs.python.org/2/library/logging.html>`_:
-  The keys in the dictionary passed in extra should not clash with the keys used by the logging system. (See the `Formatter <https://docs.python.org/2/library/logging.html#logging.Formatter>`_ documentation for more information on which keys are used by the logging system.)
+When using ``extra`` field make sure you don't use reserved names. From `Python documentation <https://docs.python.org/2/library/logging.html>`_.
+     | "The keys in the dictionary passed in extra should not clash with the keys used by the logging system. (See the `Formatter <https://docs.python.org/2/library/logging.html#logging.Formatter>`_ documentation for more information on which keys are used by the logging system.)"
+
+Set up logstash so that it listens on port 5959 and parses the input as json.
+
+For example::
+
+    bin/logstash -e 'input { udp { port => 5959 codec => json } } output { stdout { codec => rubydebug } }'
+
 
 Using with Django
 =================

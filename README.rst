@@ -56,6 +56,7 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
             'class': 'logstash.LogstashHandler',
             'host': 'localhost',
             'port': 5959,
+            'tags': ['tag1','tag2'],
             'version': 1,
         },
     },

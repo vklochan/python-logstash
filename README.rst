@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.2
+  -
 0.4.1
   - Added TCP handler.
 0.3.1
@@ -36,34 +38,32 @@ For example::
 
   import logging
   import logstash
+  import sys
 
-  test_logger = logging.getLogger('test_logger')
+  host = 'localhost'
+
+  test_logger = logging.getLogger('python-logstash-logger')
   test_logger.setLevel(logging.INFO)
-  test_logger.addHandler(logstash.LogstashHandler('localhost', 5959, version=1))
+  test_logger.addHandler(logstash.LogstashHandler(host, 5959, version=1))
+  # test_logger.addHandler(logstash.TCPLogstashHandler(host, 5959, version=1))
 
-  test_logger.info('Test logstash message.')
-  test_logger.warning('Test logstash message.')
-  test_logger.error('Test logstash message.')
+  test_logger.error('python-logstash: test logstash error message.')
+  test_logger.info('python-logstash: test logstash info message.')
+  test_logger.warning('python-logstash: test logstash warning message.')
 
-  # Add tags, which can later be used in elastic-search + kibana (or other tools)
-  d = {'tags': ['Testing', 'Documentation']}
-  test_logger.info('Test logstash message and tags', extra=d)
-
-  # Add custom fields for easier searching (with or without other fields - for example 'tags')
-  extra = {'user_id': 1}
-  test_logger.info('Test logstash fields', extra=extra)
-  fields = {'test_field': True, 'tags': ['Testing']}
-  test_logger.info('Test logstash fields', extra=fields)
+  # add extra field to logstash message
+  extra = {
+      'test_string': 'python version: ' + repr(sys.version_info),
+      'test_boolean': True,
+      'test_dict': {'a': 1, 'b': 'c'},
+      'test_float': 1.23,
+      'test_integer': 123,
+      'test_list': [1, 2, '3'],
+  }
+  test_logger.info('python-logstash: test extra fields', extra=extra)
 
 When using ``extra`` field make sure you don't use reserved names. From `Python documentation <https://docs.python.org/2/library/logging.html>`_.
      | "The keys in the dictionary passed in extra should not clash with the keys used by the logging system. (See the `Formatter <https://docs.python.org/2/library/logging.html#logging.Formatter>`_ documentation for more information on which keys are used by the logging system.)"
-
-Set up logstash so that it listens on port 5959 and parses the input as json.
-
-For example::
-
-    bin/logstash -e 'input { udp { port => 5959 codec => json } } output { stdout { codec => rubydebug } }'
-
 
 Using with Django
 =================
@@ -77,9 +77,10 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
             'level': 'DEBUG',
             'class': 'logstash.LogstashHandler',
             'host': 'localhost',
-            'port': 5959,
-            'version': 1,
-            'message_type': 'django',  # optional
+            'port': 5959, # Default value: 5959
+            'version': 1, # Version of logstash message. Default value: 0 (for backward compatibility of the library)
+            'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
+            'fqdn': false, # Fully qualified domain name. Default value: false.
         },
     },
     'loggers': {

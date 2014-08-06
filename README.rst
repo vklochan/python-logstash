@@ -7,7 +7,8 @@ http://logstash.net/
 Changelog
 =========
 0.4.2
-  -
+  - Updated README
+  - Added ``tags`` parameter to handler
 0.4.1
   - Added TCP handler.
 0.3.1
@@ -78,9 +79,10 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
             'class': 'logstash.LogstashHandler',
             'host': 'localhost',
             'port': 5959, # Default value: 5959
-            'version': 1, # Version of logstash message. Default value: 0 (for backward compatibility of the library)
+            'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
             'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-            'fqdn': false, # Fully qualified domain name. Default value: false.
+            'fqdn': False, # Fully qualified domain name. Default value: false.
+            'tags': ['tag1', 'tag2'], # list of tags. Default: None.
         },
     },
     'loggers': {

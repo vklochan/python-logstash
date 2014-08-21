@@ -117,3 +117,10 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
     },
     ...
   }
+
+Contributors
+* Volodymyr Klochan
+* Kiall Mac Innes
+* Alexander Boyd
+* joel-wright
+* Dale O'Brien

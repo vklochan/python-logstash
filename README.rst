@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.3
+  -- Added AMQP handler.
 0.4.2
   - Updated README
   - Added ``tags`` parameter to handler
@@ -65,6 +67,27 @@ For example::
 
 When using ``extra`` field make sure you don't use reserved names. From `Python documentation <https://docs.python.org/2/library/logging.html>`_.
      | "The keys in the dictionary passed in extra should not clash with the keys used by the logging system. (See the `Formatter <https://docs.python.org/2/library/logging.html#logging.Formatter>`_ documentation for more information on which keys are used by the logging system.)"
+
+To use the AMQPLogstashHandler you will need to install pika first.
+
+   pip install pika
+
+For example::
+
+  import logging
+  import logstash
+
+  test_logger = logging.getLogger('python-logstash-logger')
+  test_logger.setLevel(logging.INFO)
+  test_logger.addHandler(logstash.AMQPLogstashHandler(host='localhost', version=1))
+
+  test_logger.info('python-logstash: test logstash info message.')
+  try:
+      1/0
+  except:
+      test_logger.exception('python-logstash-logger: Exception with stack trace!')
+
+   
 
 Using with Django
 =================

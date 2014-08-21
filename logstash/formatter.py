@@ -10,6 +10,7 @@ except ImportError:
 
 
 class LogstashFormatterBase(logging.Formatter):
+
     def __init__(self, message_type='Logstash', tags=None, fqdn=False):
         self.message_type = message_type
         self.tags = tags if tags is not None else []
@@ -68,7 +69,8 @@ class LogstashFormatterBase(logging.Formatter):
 
     @classmethod
     def format_timestamp(cls, time):
-        return datetime.utcfromtimestamp(time).isoformat() + 'Z'
+        tstamp = datetime.utcfromtimestamp(time)
+        return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
 
     @classmethod
     def format_exception(cls, exc_info):
@@ -112,6 +114,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
 
 
 class LogstashFormatterVersion1(LogstashFormatterBase):
+
     def format(self, record):
         # Create message dict
         message = {

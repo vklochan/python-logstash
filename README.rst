@@ -7,7 +7,7 @@ http://logstash.net/
 Changelog
 =========
 0.4.3
-  -- Added AMQP handler.
+  - Added AMQP handler.
 0.4.2
   - Updated README
   - Added ``tags`` parameter to handler
@@ -119,8 +119,9 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
   }
 
 Contributors
-* Volodymyr Klochan
-* Kiall Mac Innes
-* Alexander Boyd
-* joel-wright
-* Dale O'Brien
+------------
+ - Volodymyr Klochan
+ - Kiall Mac Innes
+ - Alexander Boyd
+ - joel-wright
+ - Dale O'Brien

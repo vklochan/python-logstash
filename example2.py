@@ -2,9 +2,9 @@ import logging
 import logstash
 
 # AMQP parameters
-host = 'localhost'
-username = 'guest'
-password= 'guest'
+host = 'staging.moco.io'
+username = 'logger'
+password= 'logger'
 exchange = 'logstash.py'
 
 # get a logger and set logging level

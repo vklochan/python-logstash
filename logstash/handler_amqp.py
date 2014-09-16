@@ -104,19 +104,22 @@ class PikaSocket(object):
 
     def _open_connection(self):
 
-        # create connection & channel
-        self.connection = pika.BlockingConnection(self.__parameters)
-        self.channel = self.connection.channel()
+        try:
+            # create connection & channel
+            self.connection = pika.BlockingConnection(self.__parameters)
+            self.channel = self.connection.channel()
 
-        # create an exchange, if needed
-        self.channel.exchange_declare(exchange=self.__exchange,
-                                      exchange_type=self.__exchange_type,
-                                      durable=self.__durable)
+            # create an exchange, if needed
+            self.channel.exchange_declare(exchange=self.__exchange,
+                                          exchange_type=self.__exchange_type,
+                                          durable=self.__durable)
 
-        # needed when publishing
-        self.spec = pika.spec.BasicProperties(delivery_mode=2)
-        self.routing_key = self.__routing_key
-        self.exchange = self.__exchange
+            # needed when publishing
+            self.spec = pika.spec.BasicProperties(delivery_mode=2)
+            self.routing_key = self.__routing_key
+            self.exchange = self.__exchange
+        except Exception, e:
+            print u"Failed to open connection, will try again: %s" % unicode(e)
 
     def sendall(self, data):
         '''

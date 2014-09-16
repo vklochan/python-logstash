@@ -8,6 +8,11 @@ import pika
 from logstash import formatter
 
 
+class CantConnectToAMQP(Exception):
+    def __init__(self, message):
+            self.message = message
+
+
 class AMQPLogstashHandler(SocketHandler, object):
     """AMQP Log Format handler
 
@@ -100,7 +105,10 @@ class PikaSocket(object):
         self.__routing_key = routing_key
         self.__max_retry_attempts = max_retry_attempts
 
-        self._open_connection()
+        try:
+            self._open_connection()
+        except CantConnectToAMQP, e:
+            print e
 
     def _open_connection(self):
 
@@ -118,8 +126,11 @@ class PikaSocket(object):
             self.spec = pika.spec.BasicProperties(delivery_mode=2)
             self.routing_key = self.__routing_key
             self.exchange = self.__exchange
+
         except Exception, e:
-            print u"Failed to open connection, will try again: %s" % unicode(e)
+            self.connection = None
+            raise CantConnectToAMQP(
+                u"Failed to open connection, will try again: %s" % unicode(e))
 
     def sendall(self, data):
         '''
@@ -129,12 +140,20 @@ class PikaSocket(object):
         max_attempts = self.__max_retry_attempts
 
         while max_attempts > 0:
+
             try:
+
+                if not self.connection:
+                    self._open_connection()
+
                 self.channel.basic_publish(self.exchange,
                                            self.routing_key,
                                            data,
                                            properties=self.spec)
                 return
+
+            except CantConnectToAMQP, e:
+                print e
 
             except pika.exceptions.ConnectionClosed:
 

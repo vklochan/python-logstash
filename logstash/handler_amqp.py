@@ -157,10 +157,14 @@ class PikaSocket(object):
 
             except pika.exceptions.ConnectionClosed:
 
-                print 'Attempt %d of %d to reconnect to AMQP' % (
-                    self.__max_retry_attempts - max_attempts + 1,
-                    self.__max_retry_attempts)
-                print data
+                attempts = self.__max_retry_attempts - max_attempts + 1
+                # Don't say anything if there is only one attempt
+                # just try again
+                if attempts > 1:
+                    print 'Attempt %d of %d to reconnect to AMQP' % (
+                        attempts,
+                        self.__max_retry_attempts)
+                    print data
 
                 try:
                     self._open_connection()

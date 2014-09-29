@@ -13,7 +13,7 @@ class CantConnectToAMQP(Exception):
             self.message = message
 
 
-class AMQPLogstashHandler(SocketHandler, object):
+class AMQPLogstashHandler(SocketHandler):
     """AMQP Log Format handler
 
     :param host: AMQP host (default 'localhost')
@@ -47,7 +47,6 @@ class AMQPLogstashHandler(SocketHandler, object):
                  virtual_host='/', message_type='logstash', tags=None,
                  durable=False,
                  version=0, extra_fields=True, fqdn=False, facility=None):
-
 
         # AMQP parameters
         self.host = host

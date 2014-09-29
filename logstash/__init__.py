@@ -6,8 +6,11 @@ from logstash.handler_udp import UDPLogstashHandler, LogstashHandler
 try:
     from logstash.handler_amqp import AMQPLogstashHandler
 except:
-   # you need to install AMQP support to enable this handler.
+   # You need to install AMQP support to enable this handler.
+   # e.g.
+   #
+   # pip install pika
    pass
- 
+
 
 

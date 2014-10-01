@@ -10,6 +10,11 @@ except ImportError:
     import simplejson as json
 
 
+# a mapping of attribute names on log record to output keys
+# contains only those that need a mapping, fallback is record attribute name
+field_map = {
+    'name': 'logger',
+}
 
 
 class LogstashFormatterBase(logging.Formatter):

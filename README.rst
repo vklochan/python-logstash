@@ -32,10 +32,13 @@ Using pip::
 
   pip install python-logstash
 
+
 Usage
 =====
 
-``LogstashHandler`` is a custom logging handler which sends Logstash messages using UDP.
+``UDPLogstashHandler`` is a custom logging handler which sends JSON formatted 
+Logstash messages using UDP. ``TCPLogstashHandler`` provides the same 
+functionality via TCP.
 
 For example::
 
@@ -47,14 +50,24 @@ For example::
 
   test_logger = logging.getLogger('python-logstash-logger')
   test_logger.setLevel(logging.INFO)
-  test_logger.addHandler(logstash.LogstashHandler(host, 5959, version=1))
+
+  test_logger.addHandler(
+      logstash.UDPLogstashHandler(
+          host, 
+          5959, 
+          version=1,
+          default_fields=('levelname', 'name', 'lineno', 'funcName'),
+      )
+  )
+
+  # alternatively use the TCP handler
   # test_logger.addHandler(logstash.TCPLogstashHandler(host, 5959, version=1))
 
   test_logger.error('python-logstash: test logstash error message.')
   test_logger.info('python-logstash: test logstash info message.')
   test_logger.warning('python-logstash: test logstash warning message.')
 
-  # add extra field to logstash message
+  # add extra fields to logstash message
   extra = {
       'test_string': 'python version: ' + repr(sys.version_info),
       'test_boolean': True,
@@ -65,12 +78,15 @@ For example::
   }
   test_logger.info('python-logstash: test extra fields', extra=extra)
 
-When using ``extra`` field make sure you don't use reserved names. From `Python documentation <https://docs.python.org/2/library/logging.html>`_.
+When using ``extra`` field make sure you don't use reserved names. 
+From `Python documentation <https://docs.python.org/2/library/logging.html>`_.
+
      | "The keys in the dictionary passed in extra should not clash with the keys used by the logging system. (See the `Formatter <https://docs.python.org/2/library/logging.html#logging.Formatter>`_ documentation for more information on which keys are used by the logging system.)"
 
-To use the AMQPLogstashHandler you will need to install pika first.
 
-   pip install pika
+To use the ``AMQPLogstashHandler`` you will need to install pika first.
+
+  pip install pika
 
 For example::
 
@@ -79,20 +95,26 @@ For example::
 
   test_logger = logging.getLogger('python-logstash-logger')
   test_logger.setLevel(logging.INFO)
-  test_logger.addHandler(logstash.AMQPLogstashHandler(host='localhost', version=1))
+  test_logger.addHandler(
+      logstash.AMQPLogstashHandler(
+          host='localhost',
+          version=1,
+          default_fields=('levelname', 'name', 'lineno', 'funcName')
+      )
+  )
 
   test_logger.info('python-logstash: test logstash info message.')
   try:
       1/0
   except:
       test_logger.exception('python-logstash-logger: Exception with stack trace!')
-
    
 
-Using with Django
+Usage with Django
 =================
 
-Modify your ``settings.py`` to integrate ``python-logstash`` with Django's logging::
+Modify your ``settings.py`` to integrate ``python-logstash`` with Django's 
+logging::
 
   LOGGING = {
     ...
@@ -101,11 +123,23 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
             'level': 'DEBUG',
             'class': 'logstash.LogstashHandler',
             'host': 'localhost',
-            'port': 5959, # Default value: 5959
-            'version': 1, # Version of logstash event schema. Default value: 0 (for backward compatibility of the library)
-            'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
-            'fqdn': False, # Fully qualified domain name. Default value: false.
-            'tags': ['tag1', 'tag2'], # list of tags. Default: None.
+            # default: 5959
+            'port': 5959,
+            # Version of logstash event schema, default: 0 (for backward compatibility of the library)
+            'version': 1,
+            # 'type' field in logstash message, default: 'logstash'
+            'message_type': 'logstash',
+            # Fully qualified domain name, default: False
+            'fqdn': False,
+            # list of tags, default: None
+            'tags': ['tag1', 'tag2'],
+            # log record attributes to include in the message, default: ('levelname', 'name')
+            'default_fields': (
+              'levelname',
+              'name',
+              'lineno',
+              'funcName',
+            )
         },
     },
     'loggers': {
@@ -118,10 +152,13 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
     ...
   }
 
+
 Contributors
 ------------
+
  - Volodymyr Klochan
  - Kiall Mac Innes
  - Alexander Boyd
  - joel-wright
  - Dale O'Brien
+ - Florian Demmer

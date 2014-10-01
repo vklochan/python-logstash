@@ -59,7 +59,8 @@ class LogstashFormatterBase(logging.Formatter):
         else:
             self.host = socket.gethostname()
 
-    def get_extra_fields(self, record):
+    @staticmethod
+    def get_extra_fields(record):
         # The list contains all the attributes listed in
         # http://docs.python.org/library/logging.html#logrecord-attributes
         skip_list = (
@@ -152,7 +153,6 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
 
 
 class LogstashFormatterVersion1(LogstashFormatterBase):
-
     def format(self, record):
         # Create message dict
         message = {

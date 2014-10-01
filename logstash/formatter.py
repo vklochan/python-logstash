@@ -17,6 +17,20 @@ field_map = {
 }
 
 
+def format_field(record_key, value):
+    """
+    Apply special formatting to certain record fields.
+
+    :param record_key: record attribute name
+    :param value: attribute value to format
+    :return: the formatted value or original value
+    """
+    if record_key == 'exc_info':
+        return ''.join(traceback.format_exception(*value)) if value else ''
+
+    return value
+
+
 class LogstashFormatterBase(logging.Formatter):
     def __init__(self, message_type='Logstash', tags=None, fqdn=False,
             default_fields=None, exc_fields=None):
@@ -70,23 +84,25 @@ class LogstashFormatterBase(logging.Formatter):
 
         return fields
 
-    def get_debug_fields(self, record):
-        fields = {
-            'exc_info': self.format_exception(record.exc_info),
-            'lineno': record.lineno,
-            'process': record.process,
-            'threadName': record.threadName,
-        }
+    @staticmethod
+    def get_fields(record, field_names):
+        """
+        Get a dict with key/value pairs for all fields in `field_names` from 
+        the `record`. Keys are translated according to the `field_map` and
+        special values formatted using `format_field()`.
 
-        # funcName was added in 2.5
-        if not getattr(record, 'funcName', None):
-            fields['funcName'] = record.funcName
-
-        # processName was added in 2.6
-        if not getattr(record, 'processName', None):
-            fields['processName'] = record.processName
-
-        return fields
+        :param record: log record
+        :param field_names: list of record attribute names
+        :return: dict, ready for output
+        """
+        return dict([
+            (
+                field_map.get(record_key, record_key),
+                format_field(record_key, getattr(record, record_key, None))
+            )
+            for record_key
+            in field_names
+        ])
 
     @classmethod
     def format_source(cls, message_type, host, path):
@@ -97,10 +113,6 @@ class LogstashFormatterBase(logging.Formatter):
         tstamp = datetime.utcfromtimestamp(time)
         return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % \
             (tstamp.microsecond / 1000) + "Z"
-
-    @classmethod
-    def format_exception(cls, exc_info):
-        return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
 
     @classmethod
     def serialize(cls, message):
@@ -135,7 +147,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
 
         # If exception, add debug info
         if record.exc_info:
-            message['@fields'].update(self.get_debug_fields(record))
+            message['@fields'].update(self.get_fields(record, self.exc_fields))
 
         return self.serialize(message)
 
@@ -163,6 +175,6 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
 
         # If exception, add debug info
         if record.exc_info:
-            message.update(self.get_debug_fields(record))
+            message.update(self.get_fields(record, self.exc_fields))
 
         return self.serialize(message)

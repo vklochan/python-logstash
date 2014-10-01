@@ -3,6 +3,7 @@ import logging
 import socket
 import sys
 from datetime import datetime
+
 try:
     import json
 except ImportError:
@@ -70,7 +71,8 @@ class LogstashFormatterBase(logging.Formatter):
     @classmethod
     def format_timestamp(cls, time):
         tstamp = datetime.utcfromtimestamp(time)
-        return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
+        return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % \
+            (tstamp.microsecond / 1000) + "Z"
 
     @classmethod
     def format_exception(cls, exc_info):
@@ -83,6 +85,7 @@ class LogstashFormatterBase(logging.Formatter):
         else:
             return bytes(json.dumps(message), 'utf-8')
 
+
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
 
@@ -92,7 +95,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
             '@timestamp': self.format_timestamp(record.created),
             '@message': record.getMessage(),
             '@source': self.format_source(self.message_type, self.host,
-                                          record.pathname),
+                record.pathname),
             '@source_host': self.host,
             '@source_path': record.pathname,
             '@tags': self.tags,

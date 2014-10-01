@@ -136,11 +136,10 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
             '@source_path': record.pathname,
             '@tags': self.tags,
             '@type': self.message_type,
-            '@fields': {
-                'levelname': record.levelname,
-                'logger': record.name,
-            },
         }
+
+        # Add default extra fields
+        message['@fields'].update(self.get_fields(record, self.default_fields))
 
         # Add extra fields
         message['@fields'].update(self.get_extra_fields(record))
@@ -164,11 +163,10 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             'path': record.pathname,
             'tags': self.tags,
             'type': self.message_type,
-
-            # Extra Fields
-            'levelname': record.levelname,
-            'logger': record.name,
         }
+
+        # Add default extra fields
+        message.update(self.get_fields(record, self.default_fields))
 
         # Add extra fields
         message.update(self.get_extra_fields(record))

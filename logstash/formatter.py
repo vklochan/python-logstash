@@ -10,11 +10,30 @@ except ImportError:
     import simplejson as json
 
 
-class LogstashFormatterBase(logging.Formatter):
 
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+
+class LogstashFormatterBase(logging.Formatter):
+    def __init__(self, message_type='Logstash', tags=None, fqdn=False,
+            default_fields=None, exc_fields=None):
         self.message_type = message_type
         self.tags = tags if tags is not None else []
+
+        self.default_fields = default_fields \
+            if default_fields is not None \
+            else (
+                'levelname',
+                'name',
+            )
+        self.exc_fields = exc_fields \
+            if exc_fields is not None \
+            else (
+                'exc_info',
+                'funcName',
+                'lineno',
+                'process',
+                'processName',
+                'threadName',
+            )
 
         if fqdn:
             self.host = socket.getfqdn()

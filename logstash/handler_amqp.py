@@ -40,8 +40,8 @@ class AMQPLogstashHandler(SocketHandler, object):
     def __init__(self, host='localhost', port=5672, username='guest',
                  password='guest', exchange='logstash', exchange_type='fanout',
                  virtual_host='/', message_type='logstash', tags=None,
-                 durable=False,
-                 version=0, extra_fields=True, fqdn=False, facility=None):
+                 durable=False, version=0, extra_fields=True, fqdn=False,
+                 facility=None, **kwargs):
 
 
         # AMQP parameters
@@ -61,7 +61,7 @@ class AMQPLogstashHandler(SocketHandler, object):
         self.tags = tags or []
         fn = formatter.LogstashFormatterVersion1 if version == 1 \
             else formatter.LogstashFormatterVersion0
-        self.formatter = fn(message_type, tags, fqdn)
+        self.formatter = fn(message_type, tags, fqdn, **kwargs)
 
         # Standard logging parameters
         self.extra_fields = extra_fields

@@ -1,5 +1,8 @@
 import json
-from urllib import urlencode
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
 from logging import Filter
 from logging.handlers import SocketHandler

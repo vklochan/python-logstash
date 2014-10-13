@@ -5,7 +5,7 @@ import logstash
 host = '127.0.0.1'
 username = 'logger'
 password= 'logger'
-exchange = 'logstash.py'
+exchange = 'logstash'
 
 # get a logger and set logging level
 test_logger = logging.getLogger('python-logstash-logger')

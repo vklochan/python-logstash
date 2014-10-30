@@ -30,7 +30,7 @@ class LogstashFormatterBase(logging.Formatter):
             'processName', 'relativeCreated', 'thread', 'threadName', 'extra')
 
         if sys.version_info < (3, 0):
-            easy_types = (basestring, bool, dict, float, int, list, type(None))
+            easy_types = (basestring, bool, dict, float, int, long, list, type(None))
         else:
             easy_types = (str, bool, dict, float, int, list, type(None))
 

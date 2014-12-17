@@ -72,9 +72,13 @@ class LogstashFormatterBase(logging.Formatter):
         tstamp = datetime.utcfromtimestamp(time)
         return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
 
-    @classmethod
-    def format_exception(cls, exc_info):
-        return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
+    @staticmethod
+    def format_exception(exc_info):
+        return ''.join(traceback.format_exception(
+            type=exc_info['type'],
+            value=exc_info['value'],
+            tb=exc_info['tb'],
+        ))
 
     @classmethod
     def serialize(cls, message):

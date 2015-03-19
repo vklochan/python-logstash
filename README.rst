@@ -6,6 +6,9 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.4
+  - Fixed urllib import python3 compatibility.
+  - Added long type to easy_types.
 0.4.3
   - Added AMQP handler.
 0.4.2

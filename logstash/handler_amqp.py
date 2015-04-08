@@ -13,6 +13,12 @@ class CantConnectToAMQP(Exception):
             self.message = message
 
 
+class PikaLogFilter(Filter):
+    """A log filter which filters out pika logs"""
+    def filter(self, record):
+        return not record.name.split(".")[0] == "pika"
+        
+        
 class AMQPLogstashHandler(SocketHandler):
     """AMQP Log Format handler
 
@@ -71,6 +77,7 @@ class AMQPLogstashHandler(SocketHandler):
         self.extra_fields = extra_fields
         self.fqdn = fqdn
         self.facility = facility
+        self.addFilter(PikaLogFilter())
 
     def makeSocket(self, **kwargs):
 

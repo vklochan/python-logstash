@@ -10,7 +10,6 @@ except ImportError:
 
 
 class LogstashFormatterBase(logging.Formatter):
-
     def __init__(self, message_type='Logstash', tags=None, fqdn=False):
         self.message_type = message_type
         self.tags = tags if tags is not None else []

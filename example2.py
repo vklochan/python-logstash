@@ -2,10 +2,10 @@ import logging
 import logstash
 
 # AMQP parameters
-host = 'localhost'
-username = 'guest'
-password= 'guest'
-exchange = 'logstash.py'
+host = '127.0.0.1'
+username = 'logger'
+password= 'logger'
+exchange = 'logstash'
 
 # get a logger and set logging level
 test_logger = logging.getLogger('python-logstash-logger')

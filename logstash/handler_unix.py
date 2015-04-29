@@ -1,11 +1,11 @@
-import logging.Handler
+from logging import Handler
 import socket
 from logstash import formatter
 
 
 # Derive from object to force a new-style class and thus allow super() to work
 # on Python 2.6
-class UnixLogstashHandler(logging.Handler, object):
+class UnixLogstashHandler(Handler, object):
     """Python logging handler for Logstash. Sends events over Unix socket.
     :param socket_name: The name of the unix socket to use.
     """
@@ -14,7 +14,7 @@ class UnixLogstashHandler(logging.Handler, object):
         """
         Initialize a handler.
         """
-        logging.Handler.__init__(self)
+        Handler.__init__(self)
 
         self.formatter = formatter.LogstashFormatterVersion1(message_type, tags, fqdn)
 

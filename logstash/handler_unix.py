@@ -25,4 +25,7 @@ class UnixLogstashHandler(Handler, object):
         """
         Emit a record.
         """
-        self.sock.sendall(self.formatter.format(record) + b'\n')
+        try:
+            self.sock.sendall(self.formatter.format(record) + b'\n')
+        except socket.error:
+            self.sock.close()

@@ -10,9 +10,9 @@ except ImportError:
 
 
 class LogstashFormatterBase(logging.Formatter):
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
-        self.message_type = message_type
+    def __init__(self, tags=None, fqdn=False, **kwargs):
         self.tags = tags if tags is not None else []
+        self.kwargs = kwargs
 
         if fqdn:
             self.host = socket.getfqdn()
@@ -82,6 +82,7 @@ class LogstashFormatterBase(logging.Formatter):
         else:
             return bytes(json.dumps(message), 'utf-8')
 
+
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
 
@@ -129,6 +130,33 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             'levelname': record.levelname,
             'logger': record.name,
         }
+
+        # Add extra fields
+        message.update(self.get_extra_fields(record))
+
+        # If exception, add debug info
+        if record.exc_info:
+            message.update(self.get_debug_fields(record))
+
+        return self.serialize(message)
+
+
+class MiniLogstashFormatter(LogstashFormatterBase):
+
+    def format(self, record):
+        # Create message dict
+        message = {
+            '@timestamp': self.format_timestamp(record.created),
+            'message': record.getMessage(),
+            'host': self.host,
+            'tags': self.tags,
+
+            # Extra Fields
+            'levelname': record.levelname,
+        }
+
+        # Add configured fields
+        message.update(self.kwargs)
 
         # Add extra fields
         message.update(self.get_extra_fields(record))

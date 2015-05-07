@@ -10,13 +10,13 @@ class UnixLogstashHandler(Handler, object):
     :param socket_name: The name of the unix socket to use.
     """
 
-    def __init__(self, socket_name, message_type='logstash', tags=None, fqdn=False):
+    def __init__(self, socket_name, formatter_class=formatter.MiniLogstashFormatter, **kwargs):
         """
         Initialize a handler.
         """
         Handler.__init__(self)
 
-        self.formatter = formatter.LogstashFormatterVersion1(message_type, tags, fqdn)
+        self.formatter = formatter_class(**kwargs)
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.connect(socket_name)
@@ -26,6 +26,7 @@ class UnixLogstashHandler(Handler, object):
         Emit a record.
         """
         try:
-            self.sock.sendall(self.formatter.format(record) + b'\n')
+            formatted_record = self.formatter.format(record)
+            self.sock.sendall(formatted_record + b'\n')
         except socket.error:
             self.sock.close()

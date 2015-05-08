@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.5
+  - Allow passing exchange's routing key to AMQP handler
 0.4.4
   - Fixed urllib import python3 compatibility.
   - Added long type to easy_types.

@@ -19,14 +19,12 @@ class UnixLogstashHandler(Handler, object):
         self.formatter = formatter_class(**kwargs)
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(2)
         self.sock.connect(socket_name)
 
     def emit(self, record):
         """
         Emit a record.
         """
-        try:
-            formatted_record = self.formatter.format(record)
-            self.sock.sendall(formatted_record + b'\n')
-        except socket.error:
-            self.sock.close()
+        formatted_record = self.formatter.format(record)
+        self.sock.sendall(formatted_record + b'\n')

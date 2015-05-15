@@ -90,34 +90,55 @@ class AMQPLogstashHandler(SocketHandler, object):
 class PikaSocket(object):
 
     def __init__(self, host, port, username, password, virtual_host, exchange,
-                routing_key, durable, exchange_type):
+                routing_key, durable, exchange_type, max_retry_attempts=3):
 
         # create connection parameters
         credentials = pika.PlainCredentials(username, password)
-        parameters = pika.ConnectionParameters(host, port, virtual_host,
-                                               credentials)
+        self.parameters = pika.ConnectionParameters(host,
+                                                    port,
+                                                    virtual_host,
+                                                    credentials)
 
-        # create connection & channel
-        self.connection = pika.BlockingConnection(parameters)
-        self.channel = self.connection.channel()
-
-        # create an exchange, if needed
-        self.channel.exchange_declare(exchange=exchange,
-                                      exchange_type=exchange_type,
-                                      durable=durable)
 
         # needed when publishing
         self.spec = pika.spec.BasicProperties(delivery_mode=2)
         self.routing_key = routing_key
         self.exchange = exchange
+        self.exchange_type = exchange_type
+        self.durable = durable
+        self.max_retry_attempts = max_retry_attempts
 
+        # connect for the first time
+        self.connect()
+
+    def connect(self):
+        # create connection & channel
+        self.connection = pika.BlockingConnection(self.parameters)
+        self.channel = self.connection.channel()
+
+        # create an exchange, if needed
+        self.channel.exchange_declare(exchange=self.exchange,
+                                      exchange_type=self.exchange_type,
+                                      durable=self.durable)
 
     def sendall(self, data):
+        attempts_left = self.max_retry_attempts
+        published = False
 
-        self.channel.basic_publish(self.exchange,
-                                   self.routing_key,
-                                   data,
-                                   properties=self.spec)
+        while attempts_left > 0:
+            try:
+                self.channel.basic_publish(self.exchange,
+                                           self.routing_key,
+                                           data,
+                                           properties=self.spec)
+                published = True
+                break
+            except:
+                self.connect()
+                attempts_left -= 1
+
+        if not published:
+            print "Error: Faild to connect to RabbitMQ"
 
     def close(self):
         try:

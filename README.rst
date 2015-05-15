@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.6
+  - Before publishing, reconnects to rabbitmq if connection is closed
 0.4.5
   - Allow passing exchange's routing key to AMQP handler
 0.4.4

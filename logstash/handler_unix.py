@@ -45,5 +45,9 @@ class UnixLogstashHandler(Handler, object):
             if not sent:
                 self.sock.close()
                 time.sleep(backoff_time)
-                backoff_time = backoff_time * (1.5 + 1 * random.random())
-                self.sock.connect(self.socket_name)
+                backoff_time *= (1.5 + 1 * random.random())
+
+                try:
+                    self.sock.connect(self.socket_name)
+                except IOError:
+                    pass

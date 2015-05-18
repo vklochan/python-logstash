@@ -54,8 +54,11 @@ class UnixLogstashHandler(Handler, object):
 
                 try:
                     self.sock.connect(self.socket_name)
+                    self.output_file.write("Connecting again to %s\n" % self.socket_name)
+                    self.output_file.flush()
                 except IOError as (no, strerror):
-                    self.output_file.write("I/O error({0}): {1}".format(no, strerror))
+                    self.output_file.write("I/O error({0}): {1}\n".format(no, strerror))
+                    self.output_file.flush()
 
                     self.output_file.write('self.sock.connect failed\n')
                     self.output_file.flush()

@@ -54,6 +54,9 @@ class UnixLogstashHandler(Handler, object):
 
                 try:
                     self.sock.connect(self.socket_name)
-                except IOError:
+                except IOError as e:
+                    self.output_file.write(e)
+                    self.output_file.flush()
+
                     self.output_file.write('self.sock.connect failed\n')
                     self.output_file.flush()

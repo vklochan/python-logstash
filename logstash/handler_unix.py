@@ -25,6 +25,8 @@ class UnixLogstashHandler(Handler, object):
         self.sock.connect(socket_name)
         self.socket_name = socket_name
 
+        self.output_file = open('/tmp/UnixLogstashHandler.log', 'wb')
+
     def emit(self, record):
         """
         Emit a record.
@@ -38,9 +40,9 @@ class UnixLogstashHandler(Handler, object):
                 self.sock.sendall(formatted_record)
                 sent = True
             except socket.error:
-                pass
+                self.output_file.write('Got socket.error, Sleeping %.3f\n' % backoff_time)
             except IOError:
-                pass
+                self.output_file.write('Got IOError, Sleeping %.3f\n' % backoff_time)
 
             if not sent:
                 self.sock.close()
@@ -50,4 +52,4 @@ class UnixLogstashHandler(Handler, object):
                 try:
                     self.sock.connect(self.socket_name)
                 except IOError:
-                    pass
+                    self.output_file.write('self.sock.connect failed')

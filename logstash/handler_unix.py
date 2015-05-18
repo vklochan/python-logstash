@@ -35,6 +35,10 @@ class UnixLogstashHandler(Handler, object):
 
         backoff_time = 0.001
         sent = False
+
+        self.sock.sendall(formatted_record)
+
+        """
         while not sent:
             try:
                 self.sock.sendall(formatted_record)
@@ -53,3 +57,4 @@ class UnixLogstashHandler(Handler, object):
                     self.sock.connect(self.socket_name)
                 except IOError:
                     self.output_file.write('self.sock.connect failed')
+        """

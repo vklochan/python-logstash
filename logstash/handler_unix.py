@@ -22,9 +22,9 @@ class UnixLogstashHandler(Handler, object):
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(2)
-        open('/tmp/UnixLogstashHandler.log', 'ab').write('Connecting')
+        open('/tmp/UnixLogstashHandler.log', 'ab').write('Connecting\n')
         self.sock.connect(socket_name)
-        open('/tmp/UnixLogstashHandler.log', 'ab').write('Connected')
+        open('/tmp/UnixLogstashHandler.log', 'ab').write('Connected\n')
         #self.socket_name = socket_name
 
         #self.output_file = open('/tmp/UnixLogstashHandler.log', 'wb')
@@ -38,6 +38,13 @@ class UnixLogstashHandler(Handler, object):
 
         return
 
+    def __del__(self):
+        try:
+            self.sock.close()
+        except:
+            pass
+
+        """
         backoff_time = 0.001
         sent = False
 
@@ -67,3 +74,4 @@ class UnixLogstashHandler(Handler, object):
 
                     self.output_file.write('self.sock.connect failed\n')
                     self.output_file.flush()
+        """

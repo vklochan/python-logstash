@@ -22,16 +22,21 @@ class UnixLogstashHandler(Handler, object):
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.settimeout(2)
+        open('/tmp/UnixLogstashHandler.log', 'ab').write('Connecting')
         self.sock.connect(socket_name)
-        self.socket_name = socket_name
+        open('/tmp/UnixLogstashHandler.log', 'ab').write('Connected')
+        #self.socket_name = socket_name
 
-        self.output_file = open('/tmp/UnixLogstashHandler.log', 'wb')
+        #self.output_file = open('/tmp/UnixLogstashHandler.log', 'wb')
 
     def emit(self, record):
         """
         Emit a record.
         """
         formatted_record = self.formatter.format(record) + b'\n'
+        self.sock.sendall(formatted_record)
+
+        return
 
         backoff_time = 0.001
         sent = False

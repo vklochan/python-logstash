@@ -10,7 +10,7 @@ except ImportError:
 
 
 class LogstashFormatterBase(logging.Formatter):
-    def __init__(self, tags=None, fqdn=False, **kwargs):
+    def __init__(self, application_name=None, tags=None, fqdn=False, **kwargs):
         self.tags = tags if tags is not None else []
         self.kwargs = kwargs
 
@@ -18,6 +18,8 @@ class LogstashFormatterBase(logging.Formatter):
             self.host = socket.getfqdn()
         else:
             self.host = socket.gethostname()
+
+        self.application_name = application_name
 
     def get_extra_fields(self, record):
         # The list contains all the attributes listed in
@@ -149,11 +151,13 @@ class MiniLogstashFormatter(LogstashFormatterBase):
             '@timestamp': self.format_timestamp(record.created),
             'message': record.getMessage(),
             'host': self.host,
-            'tags': self.tags,
 
             # Extra Fields
             'levelname': record.levelname,
         }
+
+        if self.application_name:
+            message['app'] = self.application_name
 
         # Add configured fields
         message.update(self.kwargs)

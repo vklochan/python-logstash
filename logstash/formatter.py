@@ -119,7 +119,7 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
         # Create message dict
         message = {
             '@timestamp': self.format_timestamp(record.created),
-            '@version': 1,
+            '@version': '1',
             'message': record.getMessage(),
             'host': self.host,
             'path': record.pathname,

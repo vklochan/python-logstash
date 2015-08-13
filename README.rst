@@ -92,7 +92,7 @@ For example::
   except:
       test_logger.exception('python-logstash-logger: Exception with stack trace!')
 
-   
+
 
 Using with Django
 =================
@@ -121,6 +121,23 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
         },
     },
     ...
+  }
+
+Note
+====
+
+Example Logstash Configuration (``logstash.conf``) for Receiving Events from python-logstash is::
+
+  input {
+    tcp {
+      port => 5000
+      codec => json
+    }
+  }
+  output {
+    stdout {
+      codec => rubydebug
+    }
   }
 
 Contributors

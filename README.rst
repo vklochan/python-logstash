@@ -125,7 +125,8 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
 
 Note
 ====
-Example Logstash Configuration for Receiving Events from python-logstash is::
+Example Logstash Configuration (``logstash.conf``) for Receiving Events from python-logstash is::
+  ``
   input {
     tcp {
       port => 5000
@@ -137,7 +138,7 @@ Example Logstash Configuration for Receiving Events from python-logstash is::
       codec => rubydebug
     }
   }
-
+``
 Contributors
 ------------
  - Volodymyr Klochan

@@ -10,7 +10,7 @@ class ZmqLogstashHandler(Handler, object):
     :param socket_name: The address of the server to connect to.
     """
 
-    def __init__(self, socket_name, formatter_class=formatter.MiniLogstashFormatter, **kwargs):
+    def __init__(self, socket_name, max_send_buff_size=10000, formatter_class=formatter.MiniLogstashFormatter, **kwargs):
         """
         Initialize a handler.
         """
@@ -19,7 +19,8 @@ class ZmqLogstashHandler(Handler, object):
         self.formatter = formatter_class(**kwargs)
 
         ctx = zmq.Context()
-        self.sock = ctx.socket(zmq.PUSH)
+        self.sock = ctx.socket(zmq.PUB)
+        self.sock.setsockopt(zmq.SNDHWM, max_send_buff_size)
         self.sock.connect(socket_name)
 
     def emit(self, record):

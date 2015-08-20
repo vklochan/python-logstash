@@ -1,5 +1,4 @@
 from logging import Handler
-import zmq
 from logstash import formatter
 
 
@@ -14,6 +13,7 @@ class ZmqLogstashHandler(Handler, object):
         """
         Initialize a handler.
         """
+        import zmq
         Handler.__init__(self)
 
         self.formatter = formatter_class(**kwargs)

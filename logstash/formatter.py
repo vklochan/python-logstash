@@ -47,7 +47,7 @@ class LogstashFormatterBase(logging.Formatter):
 
     def get_debug_fields(self, record):
         fields = {
-            'exc_info': self.format_exception(record.exc_info),
+            'exc_info': self.formatException(record.exc_info),
             'lineno': record.lineno,
             'process': record.process,
             'threadName': record.threadName,
@@ -71,10 +71,6 @@ class LogstashFormatterBase(logging.Formatter):
     def format_timestamp(cls, time):
         tstamp = datetime.utcfromtimestamp(time)
         return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
-
-    @classmethod
-    def format_exception(cls, exc_info):
-        return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
 
     @classmethod
     def serialize(cls, message):

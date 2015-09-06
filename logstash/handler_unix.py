@@ -1,7 +1,5 @@
 from logging import Handler
-import random
 import socket
-import time
 from logstash import formatter
 
 

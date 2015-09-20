@@ -1,8 +1,13 @@
+import inspect
+import os
 import traceback
 import logging
 import socket
 import sys
 from datetime import datetime
+import requests
+import subprocess
+
 try:
     import json
 except ImportError:
@@ -145,7 +150,7 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
 
 
 class MiniLogstashFormatter(LogstashFormatterBase):
-    def format(self, record):
+    def format_base(self, record):
         # Create message dict
         message = {
             '@timestamp': self.format_timestamp(record.created),
@@ -173,4 +178,45 @@ class MiniLogstashFormatter(LogstashFormatterBase):
         if record.exc_info:
             message.update(self.get_debug_fields(record))
 
-        return self.serialize(message)
+        return message
+
+    def format(self, record):
+        return self.serialize(self.format_base(record))
+
+
+class AWSLogstashFormatter(MiniLogstashFormatter):
+    def __init__(self, **kwargs):
+        # import here so only users of the class are required to install the packages
+        import boto
+        import boto.ec2
+        import boto.exception
+
+        MiniLogstashFormatter.__init__(self, **kwargs)
+        self.ec2_tags = {}
+        try:
+            # AWS's meta-data endpoint for instance queries on itself
+            resp = requests.get("http://169.254.169.254/2014-11-05/meta-data/instance-id", timeout=1)
+            resp.raise_for_status()
+            instance_id = resp.text
+            ec2_con = boto.ec2.connect_to_region("us-east-1")
+            inst = ec2_con.get_only_instances([instance_id])[0]
+            tags = dict(env_tag=inst.tags["Environment"], server_type_tag=inst.tags["Name"])
+            self.ec2_tags.update(tags)
+        except (requests.RequestException, boto.exception.StandardError, IndexError, KeyError):
+            raise
+        self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h']).strip()
+        # get the calling function's module name
+        module = inspect.getmodule(inspect.stack()[1][0])
+        self.module_name = module.__name__
+        # get the calling module's repository root directory name
+        repo_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'],
+                                            cwd=os.path.dirname(module.__file__)).strip()
+        self.repo_path = os.path.split(repo_path)[1]
+
+    def format(self, record):
+        msg = self.format_base(record)
+        msg.update(self.ec2_tags)
+        msg['commit'] = self.commit_hash
+        msg['python_module'] = self.module_name
+        msg['repository'] = self.repo_path
+        return self.serialize(msg)

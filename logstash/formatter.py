@@ -204,12 +204,8 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         except (boto.exception.StandardError, IndexError, KeyError):
             raise
         self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h']).strip()
-        # get the calling function's module name
-        module = inspect.getmodule(inspect.stack()[1][0])
-        self.module_name = module.__name__
         # get the calling module's repository root directory name
-        repo_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'],
-                                            cwd=os.path.dirname(module.__file__)).strip()
+        repo_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).strip()
         self.repo_path = os.path.split(repo_path)[1]
 
     def format(self, record):

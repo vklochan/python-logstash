@@ -194,7 +194,7 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         MiniLogstashFormatter.__init__(self, **kwargs)
         self.ec2_tags = {}
         try:
-            metadata = boto.utils.get_instance_metadata()
+            metadata = boto.utils.get_instance_metadata(timeout=1)
             instance_id = metadata['instance-id']
             region = metadata['placement']['availability-zone'][:-1] # us-east-1c -> us-east-1
             ec2_con = boto.ec2.connect_to_region(region)

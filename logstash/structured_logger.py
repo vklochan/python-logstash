@@ -20,7 +20,7 @@ class ArgsLogger:
 
     (3) To make the handler communicate on a different address:
 
-        logger = ArgsLogger("zmq", "tcp://my.receiver.addr:5555", module="MyGreatModule")
+        logger = ArgsLogger("zmq", ["tcp://my.receiver.addr:5555"], module="MyGreatModule")
 
     (4) To customize the parameters and classes used, pass a ready logger which will be proxied:
 
@@ -32,10 +32,11 @@ class ArgsLogger:
 
         logger.info("NEW_BID", bid_price=2.3, bidder_id="1000", recommendation_mode="regular")
 
-    :param _logger: The logger instance to proxy
+    :param logger_type: The type of communication to use ("zmq"|"unix"), or the logger instance to proxy
+    :param logger_pos_params: Optional list of positional arguments to pass the handler's constructor
     """
     STR_TO_TYPE = dict(zmq=ZmqLogstashHandler, unix=UnixLogstashHandler)
-    STR_TO_ADDR = dict(zmq="ipc:///tmp/kinesis.socket", unix="/tmp/logstash.socket")
+    STR_TO_ADDR = dict(zmq="ipc:///tmp/logstash.socket", unix="/tmp/logstash.socket")
 
     def __init__(self, logger_type, logger_pos_params=None, **kwargs):
         if isinstance(logger_type, basestring):

@@ -26,7 +26,7 @@ class ArgsLogger:
 
         logger = logging.getLogger("main_ELK")
         zmq_handler = ZmqLogstashHandler("ipc:///tmp/kinesis.socket")
-        zmq_handler.setLevel(logging.INFO)
+        logger.setLevel(logging.INFO)
         logger.addHandler(zmq_handler)
         logger = ArgsLogger(logger)
 
@@ -46,8 +46,8 @@ class ArgsLogger:
                 logger_pos_params = [self.STR_TO_ADDR[logger_type]]
             self.logger = logging.getLogger("ELK")
             handler = self.STR_TO_TYPE[logger_type](*logger_pos_params, **logger_kw_params)
-            handler.setLevel(logging.INFO)
             self.logger.addHandler(handler)
+            self.logger.setLevel(logging.INFO)
         else:
             self.logger = logger_type
 

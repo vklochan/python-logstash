@@ -16,7 +16,7 @@ class ArgsLogger:
 
     (2) To set the 'module' field used by the formatter:
 
-        logger = ArgsLogger("zmq", module="MyGreatModule")
+        logger = ArgsLogger("zmq", module="MyGreatModule", server_type="MyServer")
 
     (3) To make the handler communicate on a different address:
 

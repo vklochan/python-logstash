@@ -5,7 +5,6 @@ import logging
 import socket
 import sys
 from datetime import datetime
-import requests
 import subprocess
 
 try:
@@ -190,19 +189,19 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         import boto
         import boto.ec2
         import boto.exception
+        import boto.utils
 
         MiniLogstashFormatter.__init__(self, **kwargs)
         self.ec2_tags = {}
         try:
-            # AWS's meta-data endpoint for instance queries on itself
-            resp = requests.get("http://169.254.169.254/2014-11-05/meta-data/instance-id", timeout=1)
-            resp.raise_for_status()
-            instance_id = resp.text
-            ec2_con = boto.ec2.connect_to_region("us-east-1")
+            metadata = boto.utils.get_instance_metadata()
+            instance_id = metadata['instance-id']
+            region = metadata['placement']['availability-zone'][:-1] # us-east-1c -> us-east-1
+            ec2_con = boto.ec2.connect_to_region(region)
             inst = ec2_con.get_only_instances([instance_id])[0]
             tags = dict(env_tag=inst.tags["Environment"], server_type_tag=inst.tags["Name"])
             self.ec2_tags.update(tags)
-        except (requests.RequestException, boto.exception.StandardError, IndexError, KeyError):
+        except (boto.exception.StandardError, IndexError, KeyError):
             raise
         self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h']).strip()
         # get the calling function's module name

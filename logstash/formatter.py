@@ -212,6 +212,5 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         msg = self.format_base(record)
         msg.update(self.ec2_tags)
         msg['commit'] = self.commit_hash
-        msg['python_module'] = self.module_name
         msg['repository'] = self.repo_path
         return self.serialize(msg)

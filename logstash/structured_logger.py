@@ -18,11 +18,15 @@ class ArgsLogger:
 
         logger = ArgsLogger("zmq", module="MyGreatModule", server_type="MyServer")
 
-    (3) To make the handler communicate on a different address:
+    (3) If the current working directory is not a git repository, you can pass it with the 'cwd' kw-arg:
+
+        logger = ArgsLogger("zmq", module="MyGreatModule", server_type="MyServer", cwd=/home/user/my_repo)
+
+    (4) To make the handler communicate on a different address:
 
         logger = ArgsLogger("zmq", ["tcp://my.receiver.addr:5555"], module="MyGreatModule")
 
-    (4) To customize the parameters and classes used, pass a ready logger which will be proxied:
+    (5) To customize the parameters and classes used, pass a ready logger which will be proxied:
 
         logger = logging.getLogger("main_ELK")
         zmq_handler = ZmqLogstashHandler("ipc:///tmp/kinesis.socket")

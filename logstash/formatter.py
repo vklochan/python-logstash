@@ -184,7 +184,7 @@ class MiniLogstashFormatter(LogstashFormatterBase):
 
 
 class AWSLogstashFormatter(MiniLogstashFormatter):
-    def __init__(self, **kwargs):
+    def __init__(self, cwd=None, aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
         # import here so only users of the class are required to install the packages
         import boto
         import boto.ec2
@@ -197,16 +197,16 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
             metadata = boto.utils.get_instance_metadata(timeout=1)
             instance_id = metadata['instance-id']
             region = metadata['placement']['availability-zone'][:-1]  # us-east-1c -> us-east-1
-            ec2_con = boto.ec2.connect_to_region(region, aws_access_key_id=kwargs.get('aws_access_key_id'),
-                                                 aws_secret_access_key=kwargs.get('aws_secret_access_key'))
+            ec2_con = boto.ec2.connect_to_region(region, aws_access_key_id=aws_access_key_id,
+                                                 aws_secret_access_key=aws_secret_access_key)
             inst = ec2_con.get_only_instances([instance_id])[0]
             tags = dict(env_tag=inst.tags["Environment"], server_type_tag=inst.tags["Name"])
             self.ec2_tags.update(tags)
         except (boto.exception.StandardError, IndexError, KeyError):
             raise
-        self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h'], cwd=kwargs.get('cwd')).strip()
+        self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h'], cwd=cwd).strip()
         # get the calling module's repository root directory name
-        repo_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], cwd=kwargs.get('cwd')).strip()
+        repo_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], cwd=cwd).strip()
         self.repo_path = os.path.split(repo_path)[1]
 
     def format(self, record):

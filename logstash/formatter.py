@@ -173,7 +173,7 @@ class MiniLogstashFormatter(LogstashFormatterBase):
         # Update fields after all others, in case the user accidentally used one of them as an extra field
         message.update({'message': record.getMessage(),
                         'host': self.host,
-                        'type': '%s_%s' % (self.server_type, record.getMessage()),
+                        'type': '%s_%s' % (self.module, record.getMessage()),
                         # Extra Fields
                         'levelname': record.levelname})
 

@@ -1,5 +1,5 @@
 
-from logstash.formatter import LogstashFormatterVersion0, LogstashFormatterVersion1, MiniLogstashFormatter
+from logstash.formatter import LogstashFormatterVersion0, LogstashFormatterVersion1, MiniLogstashFormatter, AWSLogstashFormatter
 
 from logstash.handler_tcp import TCPLogstashHandler
 from logstash.handler_udp import UDPLogstashHandler, LogstashHandler

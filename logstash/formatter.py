@@ -121,7 +121,6 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
 
 
 class LogstashFormatterVersion1(LogstashFormatterBase):
-
     def format(self, record):
         # Create message dict
         message = {
@@ -153,12 +152,6 @@ class MiniLogstashFormatter(LogstashFormatterBase):
         # Create message dict
         message = {
             '@timestamp': self.format_timestamp(record.created),
-            'message': record.getMessage(),
-            'host': self.host,
-            'type': '%s_%s' % (self.server_type, record.getMessage()),
-
-            # Extra Fields
-            'levelname': record.levelname,
         }
 
         if self.module:
@@ -176,6 +169,13 @@ class MiniLogstashFormatter(LogstashFormatterBase):
         # If exception, add debug info
         if record.exc_info:
             message.update(self.get_debug_fields(record))
+
+        # Update fields after all others, in case the user accidentally used one of them as an extra field
+        message.update({'message': record.getMessage(),
+                        'host': self.host,
+                        'type': '%s_%s' % (self.server_type, record.getMessage()),
+                        # Extra Fields
+                        'levelname': record.levelname})
 
         return message
 
@@ -196,7 +196,7 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         try:
             metadata = boto.utils.get_instance_metadata(timeout=1)
             instance_id = metadata['instance-id']
-            region = metadata['placement']['availability-zone'][:-1] # us-east-1c -> us-east-1
+            region = metadata['placement']['availability-zone'][:-1]  # us-east-1c -> us-east-1
             ec2_con = boto.ec2.connect_to_region(region)
             inst = ec2_con.get_only_instances([instance_id])[0]
             tags = dict(env_tag=inst.tags["Environment"], server_type_tag=inst.tags["Name"])

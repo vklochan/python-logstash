@@ -47,10 +47,10 @@ class LogstashFormatterBase(logging.Formatter):
 
     def get_debug_fields(self, record):
         fields = {
-            'exc_info': self.format_exception(record.exc_info),
+            'stack_trace': self.format_exception(record.exc_info),
             'lineno': record.lineno,
             'process': record.process,
-            'threadName': record.threadName,
+            'thread_name': record.threadName,
         }
 
         # funcName was added in 2.5
@@ -127,8 +127,8 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             'type': self.message_type,
 
             # Extra Fields
-            'levelname': record.levelname,
-            'logger': record.name,
+            'level': record.levelname,
+            'logger_name': record.name,
         }
 
         # Add extra fields

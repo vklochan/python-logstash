@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.6
+  - Updated field names to match java counterparts supported by logstash crew
 0.4.5
   - Allow passing exchange's routing key to AMQP handler
 0.4.4
@@ -139,11 +141,3 @@ Example Logstash Configuration (``logstash.conf``) for Receiving Events from pyt
       codec => rubydebug
     }
   }
-
-Contributors
-------------
- - Volodymyr Klochan
- - Kiall Mac Innes
- - Alexander Boyd
- - joel-wright
- - Dale O'Brien

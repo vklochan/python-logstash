@@ -11,9 +11,21 @@ except ImportError:
 
 class LogstashFormatterBase(logging.Formatter):
 
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+    # The list contains all the attributes listed in
+    # http://docs.python.org/library/logging.html#logrecord-attributes
+    DEFAULT_SKIP_LIST = set((
+        'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
+        'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
+        'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
+        'processName', 'relativeCreated', 'thread', 'threadName', 'extra'))
+
+    def __init__(self, message_type='Logstash', tags=None, fqdn=False, extra_fields=None):
         self.message_type = message_type
         self.tags = tags if tags is not None else []
+
+        self.skip_list = self.DEFAULT_SKIP_LIST
+        if extra_fields is not None:
+            self.skip_list -= set(extra_fields)
 
         if fqdn:
             self.host = socket.getfqdn()
@@ -21,14 +33,6 @@ class LogstashFormatterBase(logging.Formatter):
             self.host = socket.gethostname()
 
     def get_extra_fields(self, record):
-        # The list contains all the attributes listed in
-        # http://docs.python.org/library/logging.html#logrecord-attributes
-        skip_list = (
-            'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
-            'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
-            'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
-            'processName', 'relativeCreated', 'thread', 'threadName', 'extra')
-
         if sys.version_info < (3, 0):
             easy_types = (basestring, bool, dict, float, int, long, list, type(None))
         else:
@@ -37,7 +41,7 @@ class LogstashFormatterBase(logging.Formatter):
         fields = {}
 
         for key, value in record.__dict__.items():
-            if key not in skip_list:
+            if key not in self.skip_list:
                 if isinstance(value, easy_types):
                     fields[key] = value
                 else:

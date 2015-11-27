@@ -11,9 +11,12 @@ except ImportError:
 
 class LogstashFormatterBase(logging.Formatter):
 
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+    def __init__(
+        self, message_type='Logstash', tags=None, fqdn=False, **kwargs
+    ):
         self.message_type = message_type
         self.tags = tags if tags is not None else []
+        self.settings_extra_fields = kwargs.get('extra_fields', {})
 
         if fqdn:
             self.host = socket.getfqdn()
@@ -21,6 +24,11 @@ class LogstashFormatterBase(logging.Formatter):
             self.host = socket.gethostname()
 
     def get_extra_fields(self, record):
+        def _append_field(key, value):
+            if isinstance(value, easy_types):
+                fields[key] = value
+            else:
+                fields[key] = repr(value)
         # The list contains all the attributes listed in
         # http://docs.python.org/library/logging.html#logrecord-attributes
         skip_list = (
@@ -38,11 +46,11 @@ class LogstashFormatterBase(logging.Formatter):
 
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                if isinstance(value, easy_types):
-                    fields[key] = value
-                else:
-                    fields[key] = repr(value)
+                _append_field(key, value)
 
+        for key, value in self.settings_extra_fields.items():
+            if key not in skip_list:
+                _append_field(key, value)
         return fields
 
     def get_debug_fields(self, record):
@@ -82,6 +90,7 @@ class LogstashFormatterBase(logging.Formatter):
             return json.dumps(message)
         else:
             return bytes(json.dumps(message), 'utf-8')
+
 
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0

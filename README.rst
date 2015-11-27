@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+TBA:
+  - Added ``extra_fields`` parameter to handler
 0.4.6
   - Updated field names to match java counterparts supported by logstash crew
 0.4.5
@@ -113,6 +115,10 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
             'message_type': 'logstash',  # 'type' field in logstash message. Default value: 'logstash'.
             'fqdn': False, # Fully qualified domain name. Default value: false.
             'tags': ['tag1', 'tag2'], # list of tags. Default: None.
+            'extra_fields': {
+                'server_name': 'myserver.local',
+                'server_ip': '10.74.22.12',
+            }, # dict of extra fields, always added to the log. Default: None.
         },
     },
     'loggers': {

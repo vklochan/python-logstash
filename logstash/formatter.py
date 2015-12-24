@@ -1,4 +1,3 @@
-import inspect
 import os
 import traceback
 import logging
@@ -6,6 +5,9 @@ import socket
 import sys
 from datetime import datetime
 import subprocess
+
+from pythoncode.logstash.logstash.awslib import get_ec2_metadata
+
 
 try:
     import json
@@ -194,7 +196,7 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         MiniLogstashFormatter.__init__(self, **kwargs)
         self.ec2_tags = {}
         try:
-            metadata = boto.utils.get_instance_metadata(timeout=1)
+            metadata = get_ec2_metadata()
             try:
                 instance_id = metadata['instance-id']
             except KeyError:

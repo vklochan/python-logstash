@@ -201,15 +201,18 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
                 instance_id = metadata['instance-id']
             except KeyError:
                 instance_id = None
-                self.ec2_tags = {'Environment': 'Local'}
+                self.ec2_tags = {'env_tag': 'Local'}
 
             if instance_id is not None:
                 region = metadata['placement']['availability-zone'][:-1]  # us-east-1c -> us-east-1
                 ec2_con = boto.ec2.connect_to_region(region, aws_access_key_id=aws_access_key_id,
                                                      aws_secret_access_key=aws_secret_access_key)
-                inst = ec2_con.get_only_instances([instance_id])[0]
-                tags = dict(env_tag=inst.tags["Environment"], server_type_tag=inst.tags["Name"])
-                self.ec2_tags.update(tags)
+                instance_tags = ec2_con.get_all_tags(filters={"resource-id":instance_id})
+                for instance_tag in instance_tags:
+                    if instance_tag.name == "Environment":
+                        self.ec2_tags["env_tag"] = instance_tag.value
+                    elif instance_tag.name == "Name":
+                        self.ec2_tags["server_type_tag"] = instance_tag.value
         except (boto.exception.StandardError, IndexError, KeyError):
             raise
         self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h'], cwd=cwd).strip()

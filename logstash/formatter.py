@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 import subprocess
 
-from pythoncode.logstash.logstash.awslib import get_ec2_metadata
+from logstash.awslib import get_ec2_metadata
 
 
 try:

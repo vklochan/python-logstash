@@ -125,14 +125,14 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
     ...
   }
 
-Note
-====
+Example Logstash Configuration
+==============================
 
 Example Logstash Configuration (``logstash.conf``) for Receiving Events from python-logstash is::
 
   input {
-    tcp {
-      port => 5000
+    udp {
+      port => 5959
       codec => json
     }
   }
@@ -141,3 +141,5 @@ Example Logstash Configuration (``logstash.conf``) for Receiving Events from pyt
       codec => rubydebug
     }
   }
+
+> For TCP input you need to change the logstash's input to `tcp` and modify django log handler's class to `logstash.TCPLogstashHandler`

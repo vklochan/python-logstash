@@ -142,4 +142,4 @@ Example Logstash Configuration (``logstash.conf``) for Receiving Events from pyt
     }
   }
 
-  For TCP input you need to change the logstash's input to ``tcp`` and modify django log handler's class to ``logstash.TCPLogstashHandler``
+For TCP input you need to change the logstash's input to ``tcp`` and modify django log handler's class to ``logstash.TCPLogstashHandler``

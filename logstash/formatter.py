@@ -186,7 +186,8 @@ class MiniLogstashFormatter(LogstashFormatterBase):
 
 
 class AWSLogstashFormatter(MiniLogstashFormatter):
-    def __init__(self, cwd=None, aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
+    def __init__(self, cwd=None, aws_access_key_id=None, aws_secret_access_key=None,
+                 metadata_req_timeout=None, metadata_red_retries=None, **kwargs):
         # import here so only users of the class are required to install the packages
         import boto
         import boto.ec2
@@ -196,7 +197,7 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         MiniLogstashFormatter.__init__(self, **kwargs)
         self.ec2_tags = {}
         try:
-            metadata = get_ec2_metadata()
+            metadata = get_ec2_metadata(metadata_req_timeout, metadata_red_retries)
             try:
                 instance_id = metadata['instance-id']
             except KeyError:

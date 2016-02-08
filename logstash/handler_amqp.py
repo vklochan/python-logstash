@@ -11,7 +11,18 @@ import pika
 from logstash import formatter
 
 
-class AMQPLogstashHandler(SocketHandler, object):
+class CantConnectToAMQP(Exception):
+    def __init__(self, message):
+            self.message = message
+
+
+class PikaLogFilter(Filter):
+    """A log filter which filters out pika logs"""
+    def filter(self, record):
+        return not record.name.split(".")[0] == "pika"
+        
+        
+class AMQPLogstashHandler(SocketHandler):
     """AMQP Log Format handler
 
     :param host: AMQP host (default 'localhost')
@@ -46,7 +57,6 @@ class AMQPLogstashHandler(SocketHandler, object):
                  durable=False, version=0, extra_fields=True, fqdn=False,
                  facility=None, exchange_routing_key=''):
 
-
         # AMQP parameters
         self.host = host
         self.port = port
@@ -70,6 +80,7 @@ class AMQPLogstashHandler(SocketHandler, object):
         self.extra_fields = extra_fields
         self.fqdn = fqdn
         self.facility = facility
+        self.addFilter(PikaLogFilter())
 
     def makeSocket(self, **kwargs):
 
@@ -90,34 +101,93 @@ class AMQPLogstashHandler(SocketHandler, object):
 class PikaSocket(object):
 
     def __init__(self, host, port, username, password, virtual_host, exchange,
-                routing_key, durable, exchange_type):
+                 routing_key, durable, exchange_type, max_retry_attempts=3):
 
         # create connection parameters
         credentials = pika.PlainCredentials(username, password)
-        parameters = pika.ConnectionParameters(host, port, virtual_host,
-                                               credentials)
 
-        # create connection & channel
-        self.connection = pika.BlockingConnection(parameters)
-        self.channel = self.connection.channel()
+        self.__parameters = pika.ConnectionParameters(host, port, virtual_host,
+                                                      credentials)
+        self.__exchange_type = exchange_type
+        self.__exchange = exchange
+        self.__durable = durable
+        self.__routing_key = routing_key
+        self.__max_retry_attempts = max_retry_attempts
 
-        # create an exchange, if needed
-        self.channel.exchange_declare(exchange=exchange,
-                                      exchange_type=exchange_type,
-                                      durable=durable)
+        try:
+            self._open_connection()
+        except CantConnectToAMQP, e:
+            print e
 
-        # needed when publishing
-        self.spec = pika.spec.BasicProperties(delivery_mode=2)
-        self.routing_key = routing_key
-        self.exchange = exchange
+    def _open_connection(self):
 
+        try:
+            # create connection & channel
+            self.connection = pika.BlockingConnection(self.__parameters)
+            self.channel = self.connection.channel()
+
+            # create an exchange, if needed
+            self.channel.exchange_declare(exchange=self.__exchange,
+                                          exchange_type=self.__exchange_type,
+                                          durable=self.__durable)
+
+            # needed when publishing
+            self.spec = pika.spec.BasicProperties(delivery_mode=2)
+            self.routing_key = self.__routing_key
+            self.exchange = self.__exchange
+
+        except Exception, e:
+            self.connection = None
+            raise CantConnectToAMQP(
+                u"Failed to open connection, will try again: %s" % unicode(e))
 
     def sendall(self, data):
+        '''
+        Attempt to send the log message more than once, if posible.
+        '''
 
-        self.channel.basic_publish(self.exchange,
-                                   self.routing_key,
-                                   data,
-                                   properties=self.spec)
+        max_attempts = self.__max_retry_attempts
+
+        while max_attempts > 0:
+
+            try:
+
+                if not self.connection:
+                    self._open_connection()
+
+                self.channel.basic_publish(self.exchange,
+                                           self.routing_key,
+                                           data,
+                                           properties=self.spec)
+                return
+
+            except CantConnectToAMQP, e:
+                print e
+
+            except pika.exceptions.ConnectionClosed:
+
+                attempts = self.__max_retry_attempts - max_attempts + 1
+                # Don't say anything if there is only one attempt
+                # just try again
+                if attempts > 1:
+                    print 'Attempt %d of %d to reconnect to AMQP' % (
+                        attempts,
+                        self.__max_retry_attempts)
+                    print data
+
+                try:
+                    self._open_connection()
+                except:
+                    print 'failed to re-open connection'
+
+            except Exception, e:
+                print 'Unhandled exception', e
+
+            max_attempts -= 1
+
+        print 'Failed to log using AMQP after %d attempts' %\
+            self.__max_retry_attempts
+        print data
 
     def close(self):
         try:

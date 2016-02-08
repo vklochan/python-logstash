@@ -1,8 +1,14 @@
+import os
 import traceback
 import logging
 import socket
 import sys
 from datetime import datetime
+import subprocess
+
+from logstash.awslib import get_ec2_metadata
+
+
 try:
     import json
 except ImportError:
@@ -10,15 +16,17 @@ except ImportError:
 
 
 class LogstashFormatterBase(logging.Formatter):
-
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
-        self.message_type = message_type
+    def __init__(self, server_type=None, module=None, tags=None, fqdn=False, **kwargs):
         self.tags = tags if tags is not None else []
+        self.kwargs = kwargs
 
         if fqdn:
             self.host = socket.getfqdn()
         else:
             self.host = socket.gethostname()
+
+        self.server_type = server_type
+        self.module = module
 
     def get_extra_fields(self, record):
         # The list contains all the attributes listed in
@@ -83,6 +91,7 @@ class LogstashFormatterBase(logging.Formatter):
         else:
             return bytes(json.dumps(message), 'utf-8')
 
+
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
 
@@ -114,7 +123,6 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
 
 
 class LogstashFormatterVersion1(LogstashFormatterBase):
-
     def format(self, record):
         # Create message dict
         message = {
@@ -139,3 +147,96 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             message.update(self.get_debug_fields(record))
 
         return self.serialize(message)
+
+
+class MiniLogstashFormatter(LogstashFormatterBase):
+    def format_base(self, record):
+        # Create message dict
+        message = {
+            '@timestamp': self.format_timestamp(record.created),
+        }
+
+        if self.module:
+            message['module'] = self.module
+
+        if self.server_type:
+            message['server_type'] = self.server_type
+
+        # Add configured fields
+        message.update(self.kwargs)
+
+        # Add extra fields
+        message.update(self.get_extra_fields(record))
+
+        # If exception, add debug info
+        if record.exc_info:
+            message.update(self.get_debug_fields(record))
+
+        # Update fields after all others, in case the user accidentally used one of them as an extra field
+        message.update({'message': record.getMessage(),
+                        'host': self.host,
+                        'type': '%s_%s' % (self.module, record.getMessage()),
+                        # Extra Fields
+                        'levelname': record.levelname})
+
+        return message
+
+    def format(self, record):
+        return self.serialize(self.format_base(record))
+
+
+class AWSLogstashFormatter(MiniLogstashFormatter):
+    def __init__(self, cwd=None, aws_access_key_id=None, aws_secret_access_key=None,
+                 metadata_req_timeout=None, metadata_red_retries=None, **kwargs):
+        # import here so only users of the class are required to install the packages
+        import boto
+        import boto.ec2
+        import boto.exception
+        import boto.utils
+
+        MiniLogstashFormatter.__init__(self, **kwargs)
+        self.ec2_tags = {}
+        try:
+            metadata = None
+
+            instance_id = os.environ.get('AWS_INSTANCE_ID', None)
+            if instance_id is None:
+                metadata = get_ec2_metadata(metadata_req_timeout, metadata_red_retries)
+                try:
+                    instance_id = metadata['instance-id']
+                except KeyError:
+                    instance_id = None
+                    self.ec2_tags = {'env_tag': 'Local'}
+
+            if instance_id is not None:
+                env_tag = os.environ.get('AWS_ENVIRONMENT_TAG', None)
+                server_type_tag = os.environ.get('AWS_NAME_TAG', None)
+
+                if env_tag is not None and server_type_tag is not None:
+                    self.ec2_tags["env_tag"] = env_tag
+                    self.ec2_tags["server_type_tag"] = server_type_tag
+                else:
+                    if metadata is None:
+                        metadata = get_ec2_metadata(metadata_req_timeout, metadata_red_retries)
+                    region = metadata['placement']['availability-zone'][:-1]  # us-east-1c -> us-east-1
+                    ec2_con = boto.ec2.connect_to_region(region, aws_access_key_id=aws_access_key_id,
+                                                         aws_secret_access_key=aws_secret_access_key)
+                    instance_tags = ec2_con.get_all_tags(filters={"resource-id":instance_id})
+                    for instance_tag in instance_tags:
+                        if instance_tag.name == "Environment":
+                            self.ec2_tags["env_tag"] = instance_tag.value
+                        elif instance_tag.name == "Name":
+                            self.ec2_tags["server_type_tag"] = instance_tag.value
+        except (boto.exception.StandardError, IndexError, KeyError):
+            raise
+        self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h'], cwd=cwd).strip()
+        # get the calling module's repository root directory name
+        repo_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], cwd=cwd).strip()
+        self.repo_path = os.path.split(repo_path)[1]
+
+    def format(self, record):
+        msg = self.format_base(record)
+        msg.update(self.ec2_tags)
+        msg['commit'] = self.commit_hash
+        msg['repository'] = self.repo_path
+        return self.serialize(msg)

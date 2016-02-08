@@ -197,23 +197,36 @@ class AWSLogstashFormatter(MiniLogstashFormatter):
         MiniLogstashFormatter.__init__(self, **kwargs)
         self.ec2_tags = {}
         try:
-            metadata = get_ec2_metadata(metadata_req_timeout, metadata_red_retries)
-            try:
-                instance_id = metadata['instance-id']
-            except KeyError:
-                instance_id = None
-                self.ec2_tags = {'env_tag': 'Local'}
+            metadata = None
+
+            instance_id = os.environ.get('AWS_INSTANCE_ID', None)
+            if instance_id is None:
+                metadata = get_ec2_metadata(metadata_req_timeout, metadata_red_retries)
+                try:
+                    instance_id = metadata['instance-id']
+                except KeyError:
+                    instance_id = None
+                    self.ec2_tags = {'env_tag': 'Local'}
 
             if instance_id is not None:
-                region = metadata['placement']['availability-zone'][:-1]  # us-east-1c -> us-east-1
-                ec2_con = boto.ec2.connect_to_region(region, aws_access_key_id=aws_access_key_id,
-                                                     aws_secret_access_key=aws_secret_access_key)
-                instance_tags = ec2_con.get_all_tags(filters={"resource-id":instance_id})
-                for instance_tag in instance_tags:
-                    if instance_tag.name == "Environment":
-                        self.ec2_tags["env_tag"] = instance_tag.value
-                    elif instance_tag.name == "Name":
-                        self.ec2_tags["server_type_tag"] = instance_tag.value
+                env_tag = os.environ.get('AWS_ENVIRONMENT_TAG', None)
+                server_type_tag = os.environ.get('AWS_NAME_TAG', None)
+
+                if env_tag is not None and server_type_tag is not None:
+                    self.ec2_tags["env_tag"] = env_tag
+                    self.ec2_tags["server_type_tag"] = server_type_tag
+                else:
+                    if metadata is None:
+                        metadata = get_ec2_metadata(metadata_req_timeout, metadata_red_retries)
+                    region = metadata['placement']['availability-zone'][:-1]  # us-east-1c -> us-east-1
+                    ec2_con = boto.ec2.connect_to_region(region, aws_access_key_id=aws_access_key_id,
+                                                         aws_secret_access_key=aws_secret_access_key)
+                    instance_tags = ec2_con.get_all_tags(filters={"resource-id":instance_id})
+                    for instance_tag in instance_tags:
+                        if instance_tag.name == "Environment":
+                            self.ec2_tags["env_tag"] = instance_tag.value
+                        elif instance_tag.name == "Name":
+                            self.ec2_tags["server_type_tag"] = instance_tag.value
         except (boto.exception.StandardError, IndexError, KeyError):
             raise
         self.commit_hash = subprocess.check_output(['git', 'log', '-n1', '--format=%h'], cwd=cwd).strip()

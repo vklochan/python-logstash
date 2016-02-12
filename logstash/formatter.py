@@ -21,27 +21,32 @@ class LogstashFormatterBase(logging.Formatter):
             self.host = socket.gethostname()
 
     def get_extra_fields(self, record):
-        # The list contains all the attributes listed in
-        # http://docs.python.org/library/logging.html#logrecord-attributes
-        skip_list = (
-            'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
-            'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
-            'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
-            'processName', 'relativeCreated', 'thread', 'threadName', 'extra')
+        def value_repr(value):
+            # The list contains all the attributes listed in
+            # http://docs.python.org/library/logging.html#logrecord-attributes
+            skip_list = (
+                'args', 'asctime', 'created', 'exc_info', 'exc_text',
+                'filename', 'funcName', 'id', 'levelname', 'levelno', 'lineno',
+                'module', 'msecs', 'msecs', 'message', 'msg', 'name',
+                'pathname', 'process', 'processName', 'relativeCreated',
+                'thread', 'threadName', 'extra')
 
-        if sys.version_info < (3, 0):
-            easy_types = (basestring, bool, dict, float, int, long, list, type(None))
-        else:
-            easy_types = (str, bool, dict, float, int, list, type(None))
+            if sys.version_info < (3, 0):
+                easy_types = (basestring, bool, float, int, long, type(None))
+            else:
+                easy_types = (str, bool, float, int, type(None))
 
-        fields = {}
+            if isinstance(dict, value):
+                return {k: value_repr(
+                    v) for k, v in value.items() if k not in skip_list}
+            elif isinstance(list, value):
+                return [value_repr(v) for v in value]
+            elif isinstance(value, datetime) or isinstance(value, date):
+                return self.format_timestamp(time.mktime(value.timetuple()))
+            else:
+                return repr(value)
 
-        for key, value in record.__dict__.items():
-            if key not in skip_list:
-                if isinstance(value, easy_types):
-                    fields[key] = value
-                else:
-                    fields[key] = repr(value)
+        fields = value_repr(record.__dict__)
 
         return fields
 

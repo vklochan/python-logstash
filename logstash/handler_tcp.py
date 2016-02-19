@@ -14,12 +14,18 @@ class TCPLogstashHandler(SocketHandler, object):
     :param tags: list of tags for a logger (default is None).
     """
 
-    def __init__(self, host, port=5959, message_type='logstash', tags=None, fqdn=False, version=0):
+    def __init__(self, host, port=5959, message_type='logstash',
+                 tags=None, fqdn=False, version=0, custom_formatter=None):
         super(TCPLogstashHandler, self).__init__(host, port)
-        if version == 1:
+
+        if custom_formatter:
+            self.formatter = custom_formatter(message_type, tags, fqdn)
+        elif version == 1:
             self.formatter = formatter.LogstashFormatterVersion1(message_type, tags, fqdn)
-        else:
+        elif version == 0:
             self.formatter = formatter.LogstashFormatterVersion0(message_type, tags, fqdn)
+        else:
+            raise Exception("Undefined formatter!")
 
     def makePickle(self, record):
         return self.formatter.format(record) + b'\n'

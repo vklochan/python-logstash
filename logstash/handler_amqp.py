@@ -43,8 +43,8 @@ class AMQPLogstashHandler(SocketHandler, object):
     def __init__(self, host='localhost', port=5672, username='guest',
                  password='guest', exchange='logstash', exchange_type='fanout',
                  virtual_host='/', message_type='logstash', tags=None,
-                 durable=False, version=0, extra_fields=True, fqdn=False,
-                 facility=None, exchange_routing_key=''):
+                 durable=False, version=0, custom_formatter=None, extra_fields=True,
+                 fqdn=False, facility=None, exchange_routing_key=''):
 
 
         # AMQP parameters
@@ -62,8 +62,14 @@ class AMQPLogstashHandler(SocketHandler, object):
 
         # Extract Logstash paramaters
         self.tags = tags or []
-        fn = formatter.LogstashFormatterVersion1 if version == 1 \
-            else formatter.LogstashFormatterVersion0
+        if custom_formatter:
+            fn = custom_formatter
+        elif version == 1:
+            fn = formatter.LogstashFormatterVersion1
+        elif version == 0:
+            fn = formatter.LogstashFormatterVersion0
+        else:
+            raise Exception("Undefined formatter!")
         self.formatter = fn(message_type, tags, fqdn)
 
         # Standard logging parameters

@@ -68,7 +68,7 @@ For example::
       'test_dict': {'a': 1, 'b': 'c'},
       'test_float': 1.23,
       'test_integer': 123,
-      'test_list': [1, 2, '3'],
+      'test_list': [1, 2, 3],
   }
   test_logger.info('python-logstash: test extra fields', extra=extra)
 
@@ -135,6 +135,9 @@ Example Logstash Configuration (``logstash.conf``) for Receiving Events from pyt
       port => 5000
       codec => json
     }
+    udp {
+      port => 5000
+      type => json
   }
   output {
     stdout {

@@ -50,8 +50,6 @@ class AMQPLogstashHandler(SocketHandler, object):
                  virtual_host='/', message_type='logstash', tags=None,
                  durable=False, passive=False, version=0, extra_fields=True,
                  fqdn=False, facility=None, exchange_routing_key=''):
-
-
         # AMQP parameters
         self.host = host
         self.port = port
@@ -78,19 +76,38 @@ class AMQPLogstashHandler(SocketHandler, object):
         self.facility = facility
 
     def makeSocket(self, **kwargs):
-        return KombuSocket(self.host,
-                           self.port,
-                           self.username,
-                           self.password,
-                           self.virtual_host,
-                           self.exchange,
-                           self.routing_key,
-                           self.exchange_is_durable,
-                           self.declare_exchange_passively,
-                           self.exchange_type)
+        socket = KombuSocket(self.host,
+                             self.port,
+                             self.username,
+                             self.password,
+                             self.virtual_host,
+                             self.exchange,
+                             self.routing_key,
+                             self.exchange_is_durable,
+                             self.declare_exchange_passively,
+                             self.exchange_type)
+        socket.connect()
+        return socket
 
     def makePickle(self, record):
         return self.formatter.format(record)
+
+    def send(self, s):
+        """
+        Behaves exactly like SocketHandler.send() except that it allows
+        exceptions to bubble up to emit() so we can atleast be aware of
+        logging failures.
+        """
+        if self.sock is None:
+            self.createSocket()
+
+        if self.sock:
+            try:
+                self.sock.sendall(s)
+            except OSError: #pragma: no cover
+                self.sock.close()
+                self.sock = None  # so we can call createSocket next time
+                raise
 
 
 class KombuSocket(object):
@@ -117,6 +134,9 @@ class KombuSocket(object):
                              routing_key=self.routing_key,
                              exchange=self.exchange,
                              declare=[self.exchange])
+
+    def connect(self):
+        self.connection.connect()
 
     def close(self):
         try:

@@ -1,12 +1,9 @@
-import json
+from logging.handlers import SocketHandler
 
 try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
-
-from logging import Filter
-from logging.handlers import SocketHandler
 
 from kombu import Connection, Exchange, producers
 

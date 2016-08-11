@@ -1,3 +1,4 @@
+import socket
 from logging.handlers import SocketHandler
 
 try:
@@ -101,7 +102,7 @@ class AMQPLogstashHandler(SocketHandler, object):
         if self.sock:
             try:
                 self.sock.sendall(s)
-            except OSError: #pragma: no cover
+            except (OSError, socket.error): #pragma: no cover
                 self.sock.close()
                 self.sock = None  # so we can call createSocket next time
                 raise

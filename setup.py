@@ -5,6 +5,7 @@ setup(
     version='0.4.6',
     description='Python logging handler for Logstash.',
     long_description=open('README.rst').read(),
+    license='MIT',
     author='Volodymyr Klochan',
     author_email='vklochan@gmail.com',
     url='https://github.com/vklochan/python-logstash',

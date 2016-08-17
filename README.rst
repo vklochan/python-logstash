@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.7
+  - Add couple of sensitive fields to the skip_list
 0.4.6
   - Updated field names to match java counterparts supported by logstash crew
 0.4.5

@@ -6,6 +6,8 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.7
+  - Add couple of sensitive fields to the skip_list
 0.4.6
   - Updated field names to match java counterparts supported by logstash crew
 0.4.5
@@ -125,14 +127,14 @@ Modify your ``settings.py`` to integrate ``python-logstash`` with Django's loggi
     ...
   }
 
-Note
-====
+Example Logstash Configuration
+==============================
 
 Example Logstash Configuration (``logstash.conf``) for Receiving Events from python-logstash is::
 
   input {
-    tcp {
-      port => 5000
+    udp {
+      port => 5959
       codec => json
     }
     udp {
@@ -144,3 +146,5 @@ Example Logstash Configuration (``logstash.conf``) for Receiving Events from pyt
       codec => rubydebug
     }
   }
+
+For TCP input you need to change the logstash's input to ``tcp`` and modify django log handler's class to ``logstash.TCPLogstashHandler``

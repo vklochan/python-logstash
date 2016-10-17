@@ -29,21 +29,10 @@ class LogstashFormatterBase(logging.Formatter):
             'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
             'processName', 'relativeCreated', 'thread', 'threadName', 'extra',
             'auth_token', 'password')
-
-        if sys.version_info < (3, 0):
-            easy_types = (basestring, bool, dict, float, int, long, list, type(None))
-        else:
-            easy_types = (str, bool, dict, float, int, list, type(None))
-
         fields = {}
-
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                if isinstance(value, easy_types):
-                    fields[key] = value
-                else:
-                    fields[key] = repr(value)
-
+                fields[key] = value
         return fields
 
     def get_debug_fields(self, record):

@@ -24,7 +24,7 @@ extra = {
 }
 test_logger.info('python-logstash: test extra fields', extra=extra)
 
-class Test:
+class SomeClass:
 
     def __init__(self):
         self.a = 1
@@ -33,5 +33,5 @@ class Test:
     def __repr__(self):
         return "Test(a={}, b={})".format(self.a, self.b)
 
-test_logger.info("test inner json", extra={"meta": {"test": Test()}})
+test_logger.info("test inner json: %s", SomeClass(), extra={"meta": {"test": SomeClass()}})
 

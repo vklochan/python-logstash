@@ -4,6 +4,7 @@ setup(
     name='python-logstash',
     packages=['logstash'],
     version='0.4.7',
+    install_requires=["six"],
     description='Python logging handler for Logstash.',
     long_description=open('README.rst').read(),
     license='MIT',

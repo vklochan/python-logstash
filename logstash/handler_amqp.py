@@ -8,6 +8,7 @@ from logging import Filter
 from logging.handlers import SocketHandler
 
 import pika
+from pika.adapters.tornado_connection import TornadoConnection
 from logstash import formatter
 
 
@@ -103,7 +104,7 @@ class PikaSocket(object):
                                                credentials)
 
         # create connection & channel
-        self.connection = pika.BlockingConnection(parameters)
+        self.connection = TornadoConnection(parameters)
         self.channel = self.connection.channel()
 
         # create an exchange, if needed

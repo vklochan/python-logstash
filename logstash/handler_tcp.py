@@ -50,8 +50,8 @@ class TCPLogstashHandler(SocketHandler, object):
             if self.ca_certs:
                 context.verify_mode = ssl.CERT_OPTIONAL
             else:
-                context.verify_mode = ssl.CERT_NONE
                 context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
 
         # Client side certificate auth.
         if self.certfile and self.keyfile:

@@ -6,6 +6,15 @@ http://logstash.net/
 
 Changelog
 =========
+0.4.7
+  - Add couple of sensitive fields to the skip_list
+0.4.6
+  - Updated field names to match java counterparts supported by logstash crew
+0.4.5
+  - Allow passing exchange's routing key to AMQP handler
+0.4.4
+  - Fixed urllib import python3 compatibility.
+  - Added long type to easy_types.
 0.4.3
   - Added AMQP handler.
 0.4.2
@@ -152,13 +161,21 @@ logging::
     ...
   }
 
+Example Logstash Configuration
+==============================
 
-Contributors
-------------
+Example Logstash Configuration (``logstash.conf``) for Receiving Events from python-logstash is::
 
- - Volodymyr Klochan
- - Kiall Mac Innes
- - Alexander Boyd
- - joel-wright
- - Dale O'Brien
- - Florian Demmer
+  input {
+    udp {
+      port => 5959
+      codec => json
+    }
+  }
+  output {
+    stdout {
+      codec => rubydebug
+    }
+  }
+
+For TCP input you need to change the logstash's input to ``tcp`` and modify django log handler's class to ``logstash.TCPLogstashHandler``

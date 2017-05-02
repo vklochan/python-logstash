@@ -1,5 +1,8 @@
 import json
-from urllib import urlencode
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
 from logging import Filter
 from logging.handlers import SocketHandler
@@ -24,6 +27,9 @@ class AMQPLogstashHandler(SocketHandler, object):
     :param exchange_type: AMQP exchange type (default 'fanout').
     :param durable: AMQP exchange is durable (default False)
     :param virtual_host: AMQP virtual host (default '/').
+    :param passive: exchange is declared passively, meaning that an error is
+        raised if the exchange does not exist, and succeeds otherwise. This is
+        useful if the user does not have configure permission on the exchange.
 
     :param tags: list of tags for a logger (default is None).
     :param message_type: The type of the message (default logstash).
@@ -40,8 +46,8 @@ class AMQPLogstashHandler(SocketHandler, object):
     def __init__(self, host='localhost', port=5672, username='guest',
                  password='guest', exchange='logstash', exchange_type='fanout',
                  virtual_host='/', message_type='logstash', tags=None,
-                 durable=False, version=0, extra_fields=True, fqdn=False,
-                 facility=None, **kwargs):
+                 durable=False, passive=False, version=0, extra_fields=True,
+                 fqdn=False, facility=None, exchange_routing_key='', **kwargs):
 
 
         # AMQP parameters
@@ -52,8 +58,9 @@ class AMQPLogstashHandler(SocketHandler, object):
         self.exchange_type = exchange_type
         self.exchange = exchange
         self.exchange_is_durable = durable
+        self.declare_exchange_passively = passive
         self.virtual_host = virtual_host
-        self.routing_key = ''
+        self.routing_key = exchange_routing_key
 
         SocketHandler.__init__(self, host, port)
 
@@ -78,6 +85,7 @@ class AMQPLogstashHandler(SocketHandler, object):
                           self.exchange,
                           self.routing_key,
                           self.exchange_is_durable,
+                          self.declare_exchange_passively,
                           self.exchange_type)
 
     def makePickle(self, record):
@@ -87,7 +95,7 @@ class AMQPLogstashHandler(SocketHandler, object):
 class PikaSocket(object):
 
     def __init__(self, host, port, username, password, virtual_host, exchange,
-                routing_key, durable, exchange_type):
+                routing_key, durable, passive, exchange_type):
 
         # create connection parameters
         credentials = pika.PlainCredentials(username, password)
@@ -101,6 +109,7 @@ class PikaSocket(object):
         # create an exchange, if needed
         self.channel.exchange_declare(exchange=exchange,
                                       exchange_type=exchange_type,
+                                      passive=passive,
                                       durable=durable)
 
         # needed when publishing

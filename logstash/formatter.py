@@ -17,20 +17,6 @@ field_map = {
 }
 
 
-def format_field(record_key, value):
-    """
-    Apply special formatting to certain record fields.
-
-    :param record_key: record attribute name
-    :param value: attribute value to format
-    :return: the formatted value or original value
-    """
-    if record_key == 'exc_info':
-        return ''.join(traceback.format_exception(*value)) if value else ''
-
-    return value
-
-
 class LogstashFormatterBase(logging.Formatter):
     def __init__(self, message_type='Logstash', tags=None, fqdn=False,
             default_fields=None, exc_fields=None):
@@ -47,9 +33,11 @@ class LogstashFormatterBase(logging.Formatter):
             if exc_fields is not None \
             else (
                 'exc_info',
+                # funcName was added in 2.5
                 'funcName',
                 'lineno',
                 'process',
+                # processName was added in 2.6
                 'processName',
                 'threadName',
             )
@@ -67,10 +55,11 @@ class LogstashFormatterBase(logging.Formatter):
             'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
             'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
             'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
-            'processName', 'relativeCreated', 'thread', 'threadName', 'extra')
+            'processName', 'relativeCreated', 'thread', 'threadName', 'extra',
+            'auth_token', 'password')
 
         if sys.version_info < (3, 0):
-            easy_types = (basestring, bool, dict, float, int, list, type(None))
+            easy_types = (basestring, bool, dict, float, int, long, list, type(None))
         else:
             easy_types = (str, bool, dict, float, int, list, type(None))
 
@@ -99,11 +88,24 @@ class LogstashFormatterBase(logging.Formatter):
         return dict([
             (
                 field_map.get(record_key, record_key),
-                format_field(record_key, getattr(record, record_key, None))
+                self.format_field(record_key, getattr(record, record_key, None))
             )
             for record_key
             in field_names
         ])
+
+    def format_field(self, record_key, value):
+        """
+        Apply special formatting to certain record fields.
+
+        :param record_key: record attribute name
+        :param value: attribute value to format
+        :return: the formatted value or original value
+        """
+        if record_key == 'exc_info':
+            return self.format_exception(record.exc_info)
+
+        return value
 
     @classmethod
     def format_source(cls, message_type, host, path):
@@ -114,6 +116,10 @@ class LogstashFormatterBase(logging.Formatter):
         tstamp = datetime.utcfromtimestamp(time)
         return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % \
             (tstamp.microsecond / 1000) + "Z"
+
+    @classmethod
+    def format_exception(cls, exc_info):
+        return ''.join(traceback.format_exception(*exc_info)) if exc_info else ''
 
     @classmethod
     def serialize(cls, message):
@@ -137,6 +143,10 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
             '@source_path': record.pathname,
             '@tags': self.tags,
             '@type': self.message_type,
+            '@fields': {
+                'levelname': record.levelname,
+                'logger': record.name,
+            },
         }
 
         # Add default extra fields
@@ -157,12 +167,16 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
         # Create message dict
         message = {
             '@timestamp': self.format_timestamp(record.created),
-            '@version': 1,
+            '@version': '1',
             'message': record.getMessage(),
             'host': self.host,
             'path': record.pathname,
             'tags': self.tags,
             'type': self.message_type,
+
+            # Extra Fields
+            'level': record.levelname,
+            'logger_name': record.name,
         }
 
         # Add default extra fields

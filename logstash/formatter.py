@@ -40,9 +40,9 @@ class LogstashFormatterBase(logging.Formatter):
         for key, value in record.__dict__.items():
             if key not in skip_list:
                 if isinstance(value, easy_types):
-                    fields[key] = value
+                    fields[key] = unicode(value)
                 else:
-                    fields[key] = repr(value)
+                    fields[key] = repr(unicode(value))
 
         return fields
 

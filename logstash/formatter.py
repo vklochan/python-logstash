@@ -42,7 +42,7 @@ class LogstashFormatterBase(logging.Formatter):
                 if isinstance(value, easy_types):
                     fields[key] = value
                 else:
-                    fields[key] = repr(value)
+                    fields[key] = repr(unicode(value))
 
         return fields
 

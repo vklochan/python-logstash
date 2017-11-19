@@ -31,9 +31,9 @@ class LogstashFormatterBase(logging.Formatter):
             'auth_token', 'password')
 
         if sys.version_info < (3, 0):
-            easy_types = (basestring, bool, dict, float, int, long, list, type(None))
+            easy_types = (basestring, bool, dict, float, int, long, list, tuple, type(None))
         else:
-            easy_types = (str, bool, dict, float, int, list, type(None))
+            easy_types = (str, bool, dict, float, int, list, tuple, type(None))
 
         fields = {}
 

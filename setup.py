@@ -2,6 +2,7 @@ from distutils.core import setup
 setup(
     name='python-logstash',
     packages=['logstash'],
+    install_requires=['pika'],
     version='0.4.7',
     description='Python logging handler for Logstash.',
     long_description=open('README.rst').read(),

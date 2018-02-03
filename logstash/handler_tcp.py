@@ -22,4 +22,4 @@ class TCPLogstashHandler(SocketHandler, object):
             self.formatter = formatter.LogstashFormatterVersion0(message_type, tags, fqdn)
 
     def makePickle(self, record):
-        return self.formatter.format(record) + b'\n'
+        return self.formatter.format(record) + '\n'

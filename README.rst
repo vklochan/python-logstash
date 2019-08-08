@@ -70,7 +70,7 @@ For example::
       'test_dict': {'a': 1, 'b': 'c'},
       'test_float': 1.23,
       'test_integer': 123,
-      'test_list': [1, 2, '3'],
+      'test_list': [1, 2, 3], # elements of this list need to be of the same type
   }
   test_logger.info('python-logstash: test extra fields', extra=extra)
 

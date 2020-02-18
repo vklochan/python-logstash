@@ -32,17 +32,31 @@ class LogstashFormatterBase(logging.Formatter):
 
         if sys.version_info < (3, 0):
             easy_types = (basestring, bool, dict, float, int, long, list, type(None))
+            text_type = unicode
+            decode_str = str.decode
         else:
             easy_types = (str, bool, dict, float, int, list, type(None))
+            text_type = str
+            decode_str = bytes.decode
 
         fields = {}
 
         for key, value in record.__dict__.items():
             if key not in skip_list:
                 if isinstance(value, easy_types):
-                    fields[key] = value
+                    try:
+                        fields[key] = text_type(value)
+                    except UnicodeDecodeError:
+                        fields[key] = decode_str(value, 'latin-1')
                 else:
-                    fields[key] = repr(value)
+                    try:
+                        fields[key] = text_type(repr(value))
+                    except TypeError:
+                        fields[key] = text_type(None)
+                    except UnicodeEncodeError:
+                        fields[key] = text_type(value)
+                    except UnicodeDecodeError:
+                        fields[key] = decode_str(repr(value), 'latin-1')
 
         return fields
 

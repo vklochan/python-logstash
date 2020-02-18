@@ -33,11 +33,15 @@ class LogstashFormatterBase(logging.Formatter):
         if sys.version_info < (3, 0):
             easy_types = (basestring, bool, dict, float, int, long, list, type(None))
             text_type = unicode
-            decode_str = str.decode
+
+            def decode_str(t, encoding=None):
+                return str.decode(t, encoding)
         else:
             easy_types = (str, bool, dict, float, int, list, type(None))
             text_type = str
-            decode_str = bytes.decode
+
+            def decode_str(t, encoding=None):
+                return t
 
         fields = {}
 

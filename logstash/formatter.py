@@ -31,13 +31,15 @@ class LogstashFormatterBase(logging.Formatter):
             'auth_token', 'password', 'stack_info')
 
         if sys.version_info < (3, 0):
-            easy_types = (basestring, bool, dict, float, int, long, list, type(None))
+            string_types = (basestring)
+            easy_types = (bool, dict, float, int, long, list, type(None))
             text_type = unicode
 
             def decode_str(t, encoding=None):
                 return str.decode(t, encoding)
         else:
-            easy_types = (str, bool, dict, float, int, list, type(None))
+            string_types = (str)
+            easy_types = (bool, dict, float, int, list, type(None))
             text_type = str
 
             def decode_str(t, encoding=None):
@@ -47,11 +49,13 @@ class LogstashFormatterBase(logging.Formatter):
 
         for key, value in record.__dict__.items():
             if key not in skip_list:
-                if isinstance(value, easy_types):
+                if isinstance(value, string_types):
                     try:
                         fields[key] = text_type(value)
                     except UnicodeDecodeError:
                         fields[key] = decode_str(value, 'latin-1')
+                elif isinstance(value, easy_types):
+                    fields[key] = value
                 else:
                     try:
                         fields[key] = text_type(repr(value))

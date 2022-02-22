@@ -80,9 +80,9 @@ class LogstashFormatterBase(logging.Formatter):
     @classmethod
     def serialize(cls, message):
         if sys.version_info < (3, 0):
-            return json.dumps(message)
+            return json.dumps(message, ensure_ascii=False)
         else:
-            return bytes(json.dumps(message), 'utf-8')
+            return bytes(json.dumps(message, ensure_ascii=False), 'utf-8')
 
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0

@@ -82,7 +82,7 @@ class LogstashFormatterBase(logging.Formatter):
         if sys.version_info < (3, 0):
             return json.dumps(message)
         else:
-            return bytes(json.dumps(message), 'utf-8')
+            return bytes(json.dumps(message, default=str), 'utf-8')
 
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0

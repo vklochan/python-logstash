@@ -11,11 +11,14 @@ except ImportError:
 
 class LogstashFormatterBase(logging.Formatter):
 
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+    def __init__(self, message_type='Logstash', tags=None, fqdn=False,
+                 source_host=None):
         self.message_type = message_type
         self.tags = tags if tags is not None else []
 
-        if fqdn:
+        if source_host is not None:
+            self.host = source_host
+        elif fqdn:
             self.host = socket.getfqdn()
         else:
             self.host = socket.gethostname()

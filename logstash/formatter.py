@@ -3,24 +3,52 @@ import logging
 import socket
 import sys
 from datetime import datetime
+
 try:
     import json
 except ImportError:
     import simplejson as json
 
 
-class LogstashFormatterBase(logging.Formatter):
+# a mapping of attribute names on log record to output keys
+# contains only those that need a mapping, fallback is record attribute name
+field_map = {
+    'name': 'logger',
+}
 
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+
+class LogstashFormatterBase(logging.Formatter):
+    def __init__(self, message_type='Logstash', tags=None, fqdn=False,
+            default_fields=None, exc_fields=None):
         self.message_type = message_type
         self.tags = tags if tags is not None else []
+
+        self.default_fields = default_fields \
+            if default_fields is not None \
+            else (
+                'levelname',
+                'name',
+            )
+        self.exc_fields = exc_fields \
+            if exc_fields is not None \
+            else (
+                'exc_info',
+                # funcName was added in 2.5
+                'funcName',
+                'lineno',
+                'process',
+                # processName was added in 2.6
+                'processName',
+                'threadName',
+            )
 
         if fqdn:
             self.host = socket.getfqdn()
         else:
             self.host = socket.gethostname()
 
-    def get_extra_fields(self, record):
+    @staticmethod
+    def get_extra_fields(record):
         # The list contains all the attributes listed in
         # http://docs.python.org/library/logging.html#logrecord-attributes
         skip_list = (
@@ -46,23 +74,38 @@ class LogstashFormatterBase(logging.Formatter):
 
         return fields
 
-    def get_debug_fields(self, record):
-        fields = {
-            'stack_trace': self.format_exception(record.exc_info),
-            'lineno': record.lineno,
-            'process': record.process,
-            'thread_name': record.threadName,
-        }
+    @staticmethod
+    def get_fields(record, field_names):
+        """
+        Get a dict with key/value pairs for all fields in `field_names` from 
+        the `record`. Keys are translated according to the `field_map` and
+        special values formatted using `format_field()`.
 
-        # funcName was added in 2.5
-        if not getattr(record, 'funcName', None):
-            fields['funcName'] = record.funcName
+        :param record: log record
+        :param field_names: list of record attribute names
+        :return: dict, ready for output
+        """
+        return dict([
+            (
+                field_map.get(record_key, record_key),
+                self.format_field(record_key, getattr(record, record_key, None))
+            )
+            for record_key
+            in field_names
+        ])
 
-        # processName was added in 2.6
-        if not getattr(record, 'processName', None):
-            fields['processName'] = record.processName
+    def format_field(self, record_key, value):
+        """
+        Apply special formatting to certain record fields.
 
-        return fields
+        :param record_key: record attribute name
+        :param value: attribute value to format
+        :return: the formatted value or original value
+        """
+        if record_key == 'exc_info':
+            return self.format_exception(record.exc_info)
+
+        return value
 
     @classmethod
     def format_source(cls, message_type, host, path):
@@ -71,7 +114,8 @@ class LogstashFormatterBase(logging.Formatter):
     @classmethod
     def format_timestamp(cls, time):
         tstamp = datetime.utcfromtimestamp(time)
-        return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
+        return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % \
+            (tstamp.microsecond / 1000) + "Z"
 
     @classmethod
     def format_exception(cls, exc_info):
@@ -84,6 +128,7 @@ class LogstashFormatterBase(logging.Formatter):
         else:
             return bytes(json.dumps(message, default=str), 'utf-8')
 
+
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
 
@@ -93,7 +138,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
             '@timestamp': self.format_timestamp(record.created),
             '@message': record.getMessage(),
             '@source': self.format_source(self.message_type, self.host,
-                                          record.pathname),
+                record.pathname),
             '@source_host': self.host,
             '@source_path': record.pathname,
             '@tags': self.tags,
@@ -104,18 +149,20 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
             },
         }
 
+        # Add default extra fields
+        message['@fields'].update(self.get_fields(record, self.default_fields))
+
         # Add extra fields
         message['@fields'].update(self.get_extra_fields(record))
 
         # If exception, add debug info
         if record.exc_info:
-            message['@fields'].update(self.get_debug_fields(record))
+            message['@fields'].update(self.get_fields(record, self.exc_fields))
 
         return self.serialize(message)
 
 
 class LogstashFormatterVersion1(LogstashFormatterBase):
-
     def format(self, record):
         # Create message dict
         message = {
@@ -132,11 +179,14 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             'logger_name': record.name,
         }
 
+        # Add default extra fields
+        message.update(self.get_fields(record, self.default_fields))
+
         # Add extra fields
         message.update(self.get_extra_fields(record))
 
         # If exception, add debug info
         if record.exc_info:
-            message.update(self.get_debug_fields(record))
+            message.update(self.get_fields(record, self.exc_fields))
 
         return self.serialize(message)

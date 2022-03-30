@@ -64,7 +64,7 @@ class AMQPLogstashHandler(SocketHandler, object):
 
         SocketHandler.__init__(self, host, port)
 
-        # Extract Logstash paramaters
+        # Extract Logstash parameters
         self.tags = tags or []
         fn = formatter.LogstashFormatterVersion1 if version == 1 \
             else formatter.LogstashFormatterVersion0

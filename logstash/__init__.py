@@ -3,6 +3,7 @@ from logstash.formatter import LogstashFormatterVersion0, LogstashFormatterVersi
 
 from logstash.handler_tcp import TCPLogstashHandler
 from logstash.handler_udp import UDPLogstashHandler, LogstashHandler
+from logstash.handler_file import FileLogstashHandler
 try:
     from logstash.handler_amqp import AMQPLogstashHandler
 except:

@@ -122,7 +122,7 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
             '@timestamp': self.format_timestamp(record.created),
             '@version': '1',
             'message': record.getMessage(),
-            'host': self.host,
+            'host': {'hostname': self.host},
             'path': record.pathname,
             'tags': self.tags,
             'type': self.message_type,

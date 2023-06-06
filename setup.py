@@ -1,4 +1,10 @@
-from distutils.core import setup
+import sys
+
+if sys.version_info < (3, 7):
+    from distutils.core import setup
+else:
+    from setuptools import setup
+
 setup(
     name='python-logstash',
     packages=['logstash'],

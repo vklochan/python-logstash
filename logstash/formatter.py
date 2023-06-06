@@ -84,6 +84,7 @@ class LogstashFormatterBase(logging.Formatter):
         else:
             return bytes(json.dumps(message, default=str), 'utf-8')
 
+
 class LogstashFormatterVersion0(LogstashFormatterBase):
     version = 0
 
@@ -100,6 +101,7 @@ class LogstashFormatterVersion0(LogstashFormatterBase):
             '@type': self.message_type,
             '@fields': {
                 'levelname': record.levelname,
+                'levelno': record.levelno,
                 'logger': record.name,
             },
         }
@@ -129,6 +131,7 @@ class LogstashFormatterVersion1(LogstashFormatterBase):
 
             # Extra Fields
             'level': record.levelname,
+            'levelno': record.levelno,
             'logger_name': record.name,
         }
 

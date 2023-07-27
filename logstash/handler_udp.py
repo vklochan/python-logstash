@@ -14,7 +14,7 @@ class UDPLogstashHandler(TCPLogstashHandler, DatagramHandler):
     """
 
     def makePickle(self, record):
-        return self.formatter.format(record)
+        return self.formatter.format(record) + b'\n'
 
 
 # For backward compatibility

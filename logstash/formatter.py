@@ -28,7 +28,7 @@ class LogstashFormatterBase(logging.Formatter):
             'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
             'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
             'processName', 'relativeCreated', 'thread', 'threadName', 'extra',
-            'auth_token', 'password', 'stack_info')
+            'auth_token', 'password', 'stack_info', 'taskName')
 
         if sys.version_info < (3, 0):
             easy_types = (basestring, bool, dict, float, int, long, list, type(None))

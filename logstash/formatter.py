@@ -4,6 +4,25 @@ import socket
 import sys
 from datetime import datetime
 try:
+    from datetime import timezone
+except ImportError:
+    from datetime import timedelta, tzinfo
+
+    class _UTC(tzinfo):
+        def utcoffset(self, dt):
+            return timedelta(0)
+
+        def tzname(self, dt):
+            return 'UTC'
+
+        def dst(self, dt):
+            return timedelta(0)
+
+    UTC = _UTC()
+else:
+    UTC = timezone.utc
+
+try:
     import json
 except ImportError:
     import simplejson as json
@@ -70,7 +89,7 @@ class LogstashFormatterBase(logging.Formatter):
 
     @classmethod
     def format_timestamp(cls, time):
-        tstamp = datetime.utcfromtimestamp(time)
+        tstamp = datetime.fromtimestamp(time, UTC)
         return tstamp.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (tstamp.microsecond / 1000) + "Z"
 
     @classmethod
